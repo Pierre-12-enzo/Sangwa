@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/hero-real.jpg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sangwa-Polyclinic</title>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <!-- Pre-React loader: visible until React replaces it. CSS is inlined
+         to avoid a flash if /assets/ hasn't loaded yet. Removed by main.jsx. -->
+    <div id="app-preloader" aria-hidden="true">
+      <div class="pre-stage">
+        <svg viewBox="0 0 100 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="pre-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3B6B66"/>
+              <stop offset="60%" stopColor="#1E6B43"/>
+              <stop offset="100%" stopColor="#E06D20"/>
+            </linearGradient>
+          </defs>
+          <path d="M 0 30 L 18 30 L 24 22 L 30 30 L 48 30 L 54 8 L 60 52 L 66 18 L 72 30 L 100 30"
+                fill="none" stroke="#3B6B66" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.18"/>
+          <path d="M 0 30 L 18 30 L 24 22 L 30 30 L 48 30 L 54 8 L 60 52 L 66 18 L 72 30 L 100 30"
+                fill="none" stroke="url(#pre-grad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" class="pre-trace"/>
+        </svg>
+        <div class="pre-heart" aria-hidden="true"><span></span></div>
+      </div>
+      <p>Loading Sangwa…</p>
+    </div>
+
+    <style>
+      #app-preloader {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1.25rem;
+        background: #F8FAFC;
+        color: #0F172A;
+        font-family: 'Inter', system-ui, sans-serif;
+        font-size: 0.95rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        transition: opacity 0.4s ease;
+      }
+      #app-preloader.is-hiding {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .pre-stage {
+        position: relative;
+        width: 220px;
+        height: 80px;
+      }
+      .pre-stage svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .pre-trace {
+        animation: preTrace 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+      }
+      @keyframes preTrace {
+        0%   { stroke-dashoffset: 100; }
+        60%  { stroke-dashoffset: 0; }
+        100% { stroke-dashoffset: -100; }
+      }
+      .pre-heart {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        transform: translate(-50%, -50%) scale(0.4);
+        font-size: 18px;
+        line-height: 1;
+        animation: preHeart 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+        pointer-events: none;
+      }
+      .pre-heart span {
+        position: relative;
+        display: block;
+        width: 1em;
+        height: 1em;
+        background: linear-gradient(135deg, #E06D20 0%, #1E6B43 100%);
+        transform: rotate(-45deg);
+        border-radius: 0.1em 0.1em 0 0;
+        box-shadow: 0 0 12px rgba(224, 109, 32, 0.35);
+      }
+      .pre-heart span::before,
+      .pre-heart span::after {
+        content: '';
+        position: absolute;
+        width: 1em;
+        height: 1em;
+        background: inherit;
+        border-radius: 50%;
+      }
+      .pre-heart span::before { top: -0.5em; left: 0; }
+      .pre-heart span::after  { top: 0; left: 0.5em; }
+      @keyframes preHeart {
+        0%   { left: 0%;   transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
+        10%  { left: 0%;   transform: translate(-50%, -50%) scale(1);   opacity: 1; }
+        55%  { left: 60%;  transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+        60%  { left: 60%;  transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
+        100% { left: 100%; transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
+      }
+    </style>
+
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

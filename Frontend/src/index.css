@@ -1,0 +1,845 @@
+/* frontend/src/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Inter', sans-serif;
+  }
+
+  body {
+    @apply bg-[#F8FAFC] text-[#0F172A];
+  }
+}
+
+@layer components {
+  .bg-teal-sage {
+    background-color: #3B6B66;
+  }
+
+  .text-teal-sage {
+    color: #3B6B66;
+  }
+
+  .border-teal-sage {
+    border-color: #3B6B66;
+  }
+
+  .bg-med-orange {
+    background-color: #E06D20;
+  }
+
+  .text-med-orange {
+    color: #E06D20;
+  }
+
+  .hover-bg-med-orange:hover {
+    background-color: #c95f1a;
+  }
+
+  .bg-health-green {
+    background-color: #1E6B43;
+  }
+
+  .text-health-green {
+    color: #1E6B43;
+  }
+
+  .bg-soft-white {
+    background-color: #F8FAFC;
+  }
+
+  .text-dark-slate {
+    color: #0F172A;
+  }
+
+  .shadow-soft {
+    box-shadow: 0 10px 30px -10px rgba(59, 107, 102, 0.1);
+  }
+
+  .card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-hover:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px -15px rgba(59, 107, 102, 0.25);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #3B6B66 0%, #1E6B43 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* ===== Glassmorphism utilities ===== */
+  .glass {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+  }
+
+  .glass-light {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+  }
+
+  .glass-dark {
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  /* ===== Reveal animation keyframes ===== */
+  @keyframes revealUp {
+    from {
+      opacity: 0;
+      transform: translateY(28px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes revealFade {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes revealScale {
+    from {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes floatBlob {
+
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+
+    50% {
+      transform: translate(20px, -25px) scale(1.07);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes pulseRing {
+    0% {
+      box-shadow: 0 0 0 0 rgba(224, 109, 32, 0.55);
+    }
+
+    70% {
+      box-shadow: 0 0 0 14px rgba(224, 109, 32, 0);
+    }
+
+    100% {
+      box-shadow: 0 0 0 0 rgba(224, 109, 32, 0);
+    }
+  }
+
+  /* ===== Loader animations (ECG heartbeat) ===== */
+  .loader-stage {
+    position: relative;
+    overflow: visible;
+  }
+
+  /* The trace draws itself left → right, then resets. The 60% pause
+     at the end is built into the keyframe so the eye gets a beat of
+     "rest" between heartbeats — a flatline moment, not a constant
+     scribble. */
+  .loader-trace {
+    animation: loaderTrace 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+
+  @keyframes loaderTrace {
+    0% {
+      stroke-dashoffset: 100;
+    }
+
+    60% {
+      stroke-dashoffset: 0;
+    }
+
+    100% {
+      stroke-dashoffset: -100;
+    }
+  }
+
+  /* The heart rides the leading edge of the trace. It travels left →
+     right in sync, then snaps back. The keyframe percentages match
+     the trace keyframe so the heart sits exactly at the spike. */
+  .loader-heart {
+    position: absolute;
+    left: 0;
+    transform: translateX(-50%);
+    animation: loaderHeart 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  @keyframes loaderHeart {
+    0% {
+      left: 0%;
+      transform: translate(-50%, -50%) scale(0.4);
+      opacity: 0;
+    }
+
+    10% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+
+    55% {
+      left: 60%;
+      transform: translate(-50%, -50%) scale(1.15);
+      opacity: 1;
+    }
+
+    60% {
+      left: 60%;
+      transform: translate(-50%, -50%) scale(0.4);
+      opacity: 0;
+    }
+
+    100% {
+      left: 100%;
+      transform: translate(-50%, -50%) scale(0.4);
+      opacity: 0;
+    }
+  }
+
+  /* The heart itself: built from two pseudo-elements so it can take
+     the brand gradient. */
+  .loader-heart__shape {
+    position: relative;
+    width: 1em;
+    height: 1em;
+    background: linear-gradient(135deg, #E06D20 0%, #1E6B43 100%);
+    transform: rotate(-45deg);
+    border-radius: 0.1em 0.1em 0 0;
+    box-shadow: 0 0 12px rgba(224, 109, 32, 0.35);
+  }
+
+  .loader-heart__shape::before,
+  .loader-heart__shape::after {
+    content: '';
+    position: absolute;
+    width: 1em;
+    height: 1em;
+    background: inherit;
+    border-radius: 50%;
+  }
+
+  .loader-heart__shape::before {
+    top: -0.5em;
+    left: 0;
+  }
+
+  .loader-heart__shape::after {
+    top: 0;
+    left: 0.5em;
+  }
+
+  /* Load-time reveal for Hero (auto-plays on mount) */
+  .reveal-up-on-load {
+    animation: revealUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .delay-100 {
+    animation-delay: 0.1s;
+    transition-delay: 100ms;
+  }
+
+  .delay-150 {
+    transition-delay: 150ms;
+  }
+
+  .delay-200 {
+    animation-delay: 0.2s;
+    transition-delay: 200ms;
+  }
+
+  .delay-300 {
+    animation-delay: 0.3s;
+    transition-delay: 300ms;
+  }
+
+  .delay-400 {
+    animation-delay: 0.4s;
+    transition-delay: 400ms;
+  }
+
+  .delay-500 {
+    animation-delay: 0.5s;
+    transition-delay: 500ms;
+  }
+
+  /* Scroll reveal animation */
+  .reveal-up {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .reveal-up.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+
+  .float-blob {
+    animation: floatBlob 9s ease-in-out infinite;
+  }
+
+  .pulse-ring {
+    animation: pulseRing 2.2s infinite;
+  }
+
+  /* Gradient text with motion shimmer */
+  .shimmer-text {
+    background: linear-gradient(90deg,
+        #3B6B66 0%,
+        #1E6B43 35%,
+        #E06D20 55%,
+        #1E6B43 75%,
+        #3B6B66 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 6s linear infinite;
+  }
+
+  /* Navbar link underline animation */
+  .nav-link {
+    position: relative;
+    padding-bottom: 4px;
+  }
+
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 2px;
+    background: #E06D20;
+    transform: scaleX(0);
+    transform-origin: right center;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .nav-link:hover::after,
+  .nav-link.active::after {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+}
+
+/* Navbar hero-blend gradient - matches the hero's overlay */
+.navbar-hero-blend {
+  background: linear-gradient(180deg,
+      rgba(15, 23, 42, 0.85) 0%,
+      rgba(15, 23, 42, 0.50) 60%,
+      transparent 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Note: .glass, .glass-light, .reveal-up, .delay-*, .pulse-ring, and
+   .float-blob are already defined once, above, inside @layer components.
+   (A duplicate block used to live here and silently won the cascade
+   because it sat outside the @layer, which made .reveal-up auto-play on
+   load instead of on scroll. Removed to keep scroll-triggered reveals
+   working correctly.) */
+
+
+/* ===== Testimonials v2 — "Vitals Deck" ======================================================================= */
+
+/* Add these fixes to your index.css file - replace the existing testimonial styles */
+
+/* ===== Testimonials v2 — "Vitals Deck" ===== */
+
+/* ===== Testimonials v2 — "Vitals Deck" ===== */
+
+/* ECG-paper grid backdrop for the section */
+.ecg-paper {
+  background-image:
+    linear-gradient(rgba(59, 107, 102, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 107, 102, 0.05) 1px, transparent 1px),
+    linear-gradient(rgba(59, 107, 102, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 107, 102, 0.09) 1px, transparent 1px);
+  background-size: 14px 14px, 14px 14px, 70px 70px, 70px 70px;
+}
+
+.testimonials-deck {
+  position: relative;
+  overflow: visible;
+}
+
+.testimonials-swiper {
+  width: 100%;
+  padding: 8px 0 16px;
+  overflow: visible !important;
+}
+
+/* Fix for slides - contain them properly */
+.testimonials-swiper .swiper-slide {
+  background: transparent;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  height: auto;
+  overflow: visible;
+}
+
+/* --- The Card --- */
+.testimonial-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  min-height: 320px;
+  background: #ffffff;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow:
+    0 30px 60px -28px rgba(15, 23, 42, 0.22),
+    0 0 0 1px rgba(59, 107, 102, 0.07);
+}
+
+/* Brand gradient hairline along the top edge */
+.testimonial-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3B6B66 0%, #E06D20 50%, #1E6B43 100%);
+  z-index: 3;
+}
+
+/* --- ECG Strip (Top of Card) --- */
+.ecg-strip {
+  position: relative;
+  height: 52px;
+  flex-shrink: 0;
+  border-bottom: 1px dashed rgba(59, 107, 102, 0.18);
+  background-image:
+    linear-gradient(rgba(59, 107, 102, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 107, 102, 0.06) 1px, transparent 1px);
+  background-size: 12px 12px;
+}
+
+@media (min-width: 768px) {
+  .ecg-strip {
+    height: 48px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ecg-strip {
+    height: 44px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .ecg-strip {
+    height: 40px;
+  }
+}
+
+.ecg-base {
+  opacity: 0.15;
+}
+
+.ecg-trace {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: ecgSweep 2.8s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+@keyframes ecgSweep {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Heading Divider (Section Title Underline) */
+.ecg-divider {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: ecgSweepLoop 3.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@keyframes ecgSweepLoop {
+  0% {
+    stroke-dashoffset: 100;
+    opacity: 0.4;
+  }
+  12% {
+    opacity: 1;
+  }
+  68% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  88% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+
+/* --- Card Interior Details --- */
+.ghost-quote {
+  position: absolute;
+  top: 16px;
+  right: 14px;
+  font-size: 6rem;
+  line-height: 1;
+  font-weight: 900;
+  color: rgba(59, 107, 102, 0.06);
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+
+@media (min-width: 768px) {
+  .ghost-quote {
+    font-size: 5.5rem;
+    top: 14px;
+    right: 12px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ghost-quote {
+    font-size: 5rem;
+    top: 12px;
+    right: 10px;
+  }
+}
+
+/* Vitals chips - Proper sizing */
+.vitals-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #334155;
+  background: #f1f5f9;
+  border: 1px solid rgba(59, 107, 102, 0.12);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .vitals-chip {
+    font-size: 11px;
+    padding: 4px 10px;
+    gap: 6px;
+  }
+}
+
+/* "Lub-dub" heartbeat animation for icons */
+.bpm-heart {
+  animation: bpmBeat 1.4s ease-in-out infinite;
+}
+
+@keyframes bpmBeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  12% {
+    transform: scale(1.28);
+  }
+  24% {
+    transform: scale(1);
+  }
+  36% {
+    transform: scale(1.28);
+  }
+  48% {
+    transform: scale(1);
+  }
+}
+
+/* Autoplay Progress Bar (Bottom of Card) */
+.autoplay-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: rgba(59, 107, 102, 0.08);
+  z-index: 3;
+}
+
+.autoplay-bar {
+  height: 100%;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left center;
+  will-change: transform;
+}
+
+/* Slide Counter Pop Animation */
+.index-pop {
+  display: inline-block;
+  animation: indexPop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes indexPop {
+  from {
+    opacity: 0;
+    transform: translateY(60%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- Navigation Controls --- */
+
+/* Custom Pagination Bullets */
+.testimonials-bullet {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #cbd5e1;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.testimonials-bullet--active {
+  background: #3B6B66;
+  width: 32px;
+}
+
+/* Arrow Buttons - Better positioning */
+.testimonials-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  background: white;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  color: #0F172A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.15);
+  transition: all 0.25s ease;
+  z-index: 10;
+  cursor: pointer;
+}
+
+.testimonials-arrow:hover {
+  background: #3B6B66;
+  color: white;
+  border-color: #3B6B66;
+  transform: translateY(-50%) scale(1.05);
+}
+
+.testimonials-arrow--left {
+  left: 4px;
+}
+
+.testimonials-arrow--right {
+  right: 4px;
+}
+
+@media (min-width: 640px) {
+  .testimonials-arrow--left {
+    left: 0px;
+  }
+  .testimonials-arrow--right {
+    right: 0px;
+  }
+}
+
+@media (min-width: 768px) {
+  .testimonials-arrow {
+    width: 44px;
+    height: 44px;
+  }
+  .testimonials-arrow--left {
+    left: -4px;
+  }
+  .testimonials-arrow--right {
+    right: -4px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .testimonials-arrow {
+    width: 48px;
+    height: 48px;
+  }
+  .testimonials-arrow--left {
+    left: -8px;
+  }
+  .testimonials-arrow--right {
+    right: -8px;
+  }
+}
+
+/* Patient Rail (Side Navigation) */
+.testimonials-rail {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.testimonials-rail__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.25s ease;
+  color: inherit;
+  font: inherit;
+}
+
+@media (min-width: 768px) {
+  .testimonials-rail__item {
+    padding: 8px 12px;
+    gap: 12px;
+  }
+}
+
+.testimonials-rail__item:hover {
+  background: rgba(59, 107, 102, 0.05);
+  border-color: rgba(59, 107, 102, 0.1);
+}
+
+.testimonials-rail__item.is-active {
+  background: white;
+  border-color: rgba(59, 107, 102, 0.15);
+  box-shadow: 0 8px 24px -12px rgba(15, 23, 42, 0.12);
+}
+
+/* Avatar */
+.testimonials-rail__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #e2e8f0;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+@media (min-width: 768px) {
+  .testimonials-rail__avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .testimonials-rail__avatar {
+    width: 38px;
+    height: 38px;
+    font-size: 0.85rem;
+  }
+}
+
+.testimonials-rail__item.is-active .testimonials-rail__avatar {
+  color: white;
+}
+
+/* Animated accent bar on active rail item */
+.testimonials-rail__bar {
+  width: 3px;
+  height: 0;
+  background: transparent;
+  border-radius: 2px;
+  transition: height 0.3s ease, background-color 0.3s ease;
+  flex-shrink: 0;
+}
+
+.testimonials-rail__item.is-active .testimonials-rail__bar {
+  height: 20px;
+}
+
+@media (min-width: 768px) {
+  .testimonials-rail__item.is-active .testimonials-rail__bar {
+    height: 24px;
+  }
+}
+
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .ecg-trace,
+  .ecg-divider,
+  .bpm-heart,
+  .index-pop {
+    animation: none !important;
+  }
+  .ecg-trace,
+  .ecg-divider {
+    stroke-dashoffset: 0;
+  }
+}

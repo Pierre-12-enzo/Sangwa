@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- Base ambient light gradient -->
+    <linearGradient id="ambient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#dbe7e6"/>
+      <stop offset="60%" stop-color="#b7c8c7"/>
+      <stop offset="100%" stop-color="#7e948f"/>
+    </linearGradient>
+
+    <!-- Wall -->
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#e9efee"/>
+      <stop offset="100%" stop-color="#a8bcb9"/>
+    </linearGradient>
+
+    <!-- Floor (perspective tiles) -->
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#8fa4a1"/>
+      <stop offset="100%" stop-color="#3a4f4d"/>
+    </linearGradient>
+
+    <!-- Window light -->
+    <radialGradient id="windowLight" cx="50%" cy="40%" r="70%">
+      <stop offset="0%"  stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="60%" stop-color="#e0f1f0" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#e0f1f0" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Vignette -->
+    <radialGradient id="vignette" cx="50%" cy="50%" r="80%">
+      <stop offset="60%" stop-color="#000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0.6"/>
+    </radialGradient>
+
+    <!-- Soft glow pools (sage-teal accents) -->
+    <radialGradient id="tealGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#3B6B66" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#3B6B66" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orangeGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#E06D20" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#E06D20" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Noise filter for realism -->
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/>
+      <feColorMatrix values="0 0 0 0 1
+                             0 0 0 0 1
+                             0 0 0 0 1
+                             0 0 0 0.06 0"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+    </filter>
+
+    <!-- Window frame -->
+    <pattern id="windowPane" x="0" y="0" width="60" height="120" patternUnits="userSpaceOnUse">
+      <rect width="60" height="120" fill="#f4f9f9" opacity="0.85"/>
+      <rect x="28" y="0" width="4" height="120" fill="#cfdfde"/>
+      <rect x="0"  y="58" width="60" height="4"  fill="#cfdfde"/>
+    </pattern>
+  </defs>
+
+  <!-- Ambient sky -->
+  <rect width="1600" height="1000" fill="url(#ambient)"/>
+
+  <!-- Distant wall (with windows in the back of the corridor) -->
+  <rect x="0" y="0" width="1600" height="560" fill="url(#wall)"/>
+
+  <!-- Back wall row of windows (the iconic "hospital corridor windows" cue) -->
+  <g opacity="0.85">
+    <rect x="80"   y="120" width="220" height="380" fill="url(#windowPane)" rx="6"/>
+    <rect x="340"  y="120" width="220" height="380" fill="url(#windowPane)" rx="6"/>
+    <rect x="600"  y="120" width="220" height="380" fill="url(#windowPane)" rx="6"/>
+    <rect x="860"  y="120" width="220" height="380" fill="url(#windowPane)" rx="6"/>
+    <rect x="1120" y="120" width="220" height="380" fill="url(#windowPane)" rx="6"/>
+    <rect x="1380" y="120" width="200" height="380" fill="url(#windowPane)" rx="6"/>
+  </g>
+
+  <!-- Soft light spill from the windows -->
+  <g opacity="0.55">
+    <rect x="60"   y="100" width="260" height="450" fill="url(#windowLight)"/>
+    <rect x="320"  y="100" width="260" height="450" fill="url(#windowLight)"/>
+    <rect x="580"  y="100" width="260" height="450" fill="url(#windowLight)"/>
+    <rect x="840"  y="100" width="260" height="450" fill="url(#windowLight)"/>
+    <rect x="1100" y="100" width="260" height="450" fill="url(#windowLight)"/>
+    <rect x="1360" y="100" width="240" height="450" fill="url(#windowLight)"/>
+  </g>
+
+  <!-- Handrail along the wall (subtle cue) -->
+  <rect x="0" y="500" width="1600" height="6" fill="#3B6B66" opacity="0.35"/>
+  <rect x="0" y="500" width="1600" height="2" fill="#1E6B43" opacity="0.5"/>
+
+  <!-- Floor in perspective -->
+  <polygon points="0,560 1600,560 1900,1000 -300,1000" fill="url(#floor)"/>
+
+  <!-- Floor tile lines (perspective) -->
+  <g stroke="#cfe0de" stroke-opacity="0.35" stroke-width="2">
+    <!-- Horizontal floor lines -->
+    <line x1="-300" y1="600" x2="1900" y2="600"/>
+    <line x1="-300" y1="650" x2="1900" y2="650"/>
+    <line x1="-300" y1="710" x2="1900" y2="710"/>
+    <line x1="-300" y1="780" x2="1900" y2="780"/>
+    <line x1="-300" y1="860" x2="1900" y2="860"/>
+    <line x1="-300" y1="950" x2="1900" y2="950"/>
+    <!-- Receding perspective lines -->
+    <line x1="0"    y1="560" x2="-200" y2="1000"/>
+    <line x1="160"  y1="560" x2="120"  y2="1000"/>
+    <line x1="320"  y1="560" x2="440"  y2="1000"/>
+    <line x1="480"  y1="560" x2="760"  y2="1000"/>
+    <line x1="640"  y1="560" x2="1080" y2="1000"/>
+    <line x1="800"  y1="560" x2="1400" y2="1000"/>
+    <line x1="960"  y1="560" x2="1720" y2="1000"/>
+    <line x1="1120" y1="560" x2="2040" y2="1000"/>
+    <line x1="1280" y1="560" x2="2360" y2="1000"/>
+    <line x1="1440" y1="560" x2="2680" y2="1000"/>
+    <line x1="1600" y1="560" x2="3000" y2="1000"/>
+  </g>
+
+  <!-- Reception desk silhouette (the "anchor" piece of furniture) -->
+  <g opacity="0.95">
+    <rect x="540" y="640" width="520" height="180" rx="14" fill="#1E6B43"/>
+    <rect x="540" y="640" width="520" height="22"  rx="6"  fill="#3B6B66"/>
+    <rect x="560" y="700" width="160" height="60" rx="8" fill="#0F4A2E" opacity="0.6"/>
+    <rect x="740" y="700" width="160" height="60" rx="8" fill="#0F4A2E" opacity="0.6"/>
+    <rect x="920" y="700" width="120" height="60" rx="8" fill="#0F4A2E" opacity="0.6"/>
+    <!-- Brand mark on the desk -->
+    <circle cx="800" cy="675" r="14" fill="#E06D20"/>
+    <text x="800" y="681" text-anchor="middle" font-family="Inter, sans-serif" font-weight="900" font-size="16" fill="#fff">+</text>
+  </g>
+
+  <!-- Soft waiting bench silhouettes (foreground side) -->
+  <g opacity="0.7">
+    <rect x="120"  y="780" width="220" height="50" rx="10" fill="#1E6B43"/>
+    <rect x="120"  y="830" width="220" height="14" rx="4"  fill="#0F4A2E"/>
+    <rect x="1260" y="780" width="220" height="50" rx="10" fill="#1E6B43"/>
+    <rect x="1260" y="830" width="220" height="14" rx="4"  fill="#0F4A2E"/>
+  </g>
+
+  <!-- Ceiling lights (clinical, evenly spaced) -->
+  <g>
+    <g transform="translate(200,60)">
+      <rect x="0" y="0" width="240" height="22" rx="6" fill="#ffffff" opacity="0.92"/>
+      <rect x="0" y="0" width="240" height="22" rx="6" fill="url(#windowLight)" opacity="0.6"/>
+    </g>
+    <g transform="translate(700,60)">
+      <rect x="0" y="0" width="240" height="22" rx="6" fill="#ffffff" opacity="0.92"/>
+      <rect x="0" y="0" width="240" height="22" rx="6" fill="url(#windowLight)" opacity="0.6"/>
+    </g>
+    <g transform="translate(1200,60)">
+      <rect x="0" y="0" width="240" height="22" rx="6" fill="#ffffff" opacity="0.92"/>
+      <rect x="0" y="0" width="240" height="22" rx="6" fill="url(#windowLight)" opacity="0.6"/>
+    </g>
+  </g>
+
+  <!-- Brand color glow pools -->
+  <circle cx="200"  cy="700" r="380" fill="url(#tealGlow)"/>
+  <circle cx="1400" cy="800" r="380" fill="url(#orangeGlow)"/>
+
+  <!-- Vignette to soften edges and direct focus -->
+  <rect width="1600" height="1000" fill="url(#vignette)"/>
+
+  <!-- Subtle film grain over everything -->
+  <rect width="1600" height="1000" fill="#ffffff" filter="url(#grain)" opacity="0.4"/>
+</svg>
