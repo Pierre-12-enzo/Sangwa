@@ -277,7 +277,7 @@ function AboutSection() {
             </div>
           </Reveal>
 
-          <div className="relative grid md:grid-cols-3 gap-8">
+          <div className="relative grid p-5 md:grid-cols-3 gap-8">
             {/* Connecting line, desktop only */}
             <div
               className="hidden md:block absolute top-7 left-[16.5%] right-[16.5%] h-0.5 bg-gradient-to-r from-[#3B6B66] via-[#1E6B43] to-[#E06D20]"
