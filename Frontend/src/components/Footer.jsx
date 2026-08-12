@@ -1,21 +1,23 @@
 // frontend/src/components/Footer.jsx
 import React, { useState } from 'react';
-import { 
-  FaMapMarkerAlt, 
-  FaPhone, 
-  FaEnvelope, 
-  FaClock, 
-  FaFacebook, 
-  FaTwitter, 
-  FaInstagram, 
+import {
+  FaMapMarkerAlt,
+  FaPhone,
+  FaEnvelope,
+  FaClock,
+  FaFacebook,
+  FaTwitter,
+  FaInstagram,
   FaWhatsapp,
   FaHeart,
   FaArrowUp,
   FaAmbulance,
   FaShieldAlt
 } from 'react-icons/fa';
+import { useI18n } from '../i18n/I18nProvider';
 
 function Footer() {
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
@@ -33,7 +35,7 @@ function Footer() {
   };
 
   return (
-    <footer id="contact" className="bg-[#0F172A] text-white">
+    <footer className="bg-[#0F172A] text-white">
       {/* Main Footer */}
       <div className="max-w-7xl mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
@@ -49,20 +51,37 @@ function Footer() {
               </div>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed mb-6">
-              Delivering high-quality, compassionate healthcare to the Huye community 
-              and surrounding regions since 2023.
+              {t('footer.about')}
             </p>
             <div className="flex gap-4">
-              <a href="#" className="text-gray-400 hover:text-[#E06D20] transition text-xl">
+              <a
+                href="#"
+                aria-label="Facebook"
+                className="text-gray-400 hover:text-[#E06D20] transition text-xl"
+              >
                 <FaFacebook />
               </a>
-              <a href="#" className="text-gray-400 hover:text-[#E06D20] transition text-xl">
+              <a
+                href="#"
+                aria-label="Twitter"
+                className="text-gray-400 hover:text-[#E06D20] transition text-xl"
+              >
                 <FaTwitter />
               </a>
-              <a href="#" className="text-gray-400 hover:text-[#E06D20] transition text-xl">
+              <a
+                href="#"
+                aria-label="Instagram"
+                className="text-gray-400 hover:text-[#E06D20] transition text-xl"
+              >
                 <FaInstagram />
               </a>
-              <a href="#" className="text-gray-400 hover:text-[#E06D20] transition text-xl">
+              <a
+                href="https://wa.me/250793929136"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="WhatsApp"
+                className="text-gray-400 hover:text-[#E06D20] transition text-xl"
+              >
                 <FaWhatsapp />
               </a>
             </div>
@@ -70,30 +89,43 @@ function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-lg font-semibold mb-6">Quick Links</h4>
+            <h4 className="text-lg font-semibold mb-6">{t('footer.quick')}</h4>
             <ul className="space-y-3">
-              <li><a href="#about" className="text-gray-400 hover:text-[#E06D20] transition text-sm">About Us</a></li>
-              <li><a href="#services" className="text-gray-400 hover:text-[#E06D20] transition text-sm">Our Services</a></li>
-              <li><a href="#testimonials" className="text-gray-400 hover:text-[#E06D20] transition text-sm">Testimonials</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-[#E06D20] transition text-sm">Patient Portal</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-[#E06D20] transition text-sm">Careers</a></li>
+              <li><a href="#about" className="text-gray-400 hover:text-[#E06D20] transition text-sm">{t('nav.about')}</a></li>
+              <li><a href="#services" className="text-gray-400 hover:text-[#E06D20] transition text-sm">{t('nav.services')}</a></li>
+              <li><a href="#testimonials" className="text-gray-400 hover:text-[#E06D20] transition text-sm">{t('nav.testimonials')}</a></li>
+              <li><a href="#contact" className="text-gray-400 hover:text-[#E06D20] transition text-sm">{t('nav.contact')}</a></li>
+              <li>
+                <a
+                  href="/brochure.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-[#E06D20] transition text-sm"
+                >
+                  {t('map.brochure')}
+                </a>
+              </li>
             </ul>
           </div>
 
           {/* Contact Info */}
           <div>
-            <h4 className="text-lg font-semibold mb-6">Contact & Hours</h4>
+            <h4 className="text-lg font-semibold mb-6">{t('footer.contact')}</h4>
             <ul className="space-y-4">
               <li className="flex items-start gap-3 text-sm">
                 <FaMapMarkerAlt className="text-[#E06D20] mt-1 flex-shrink-0" />
-                <span className="text-gray-400">Ngoma Sector, Huye District<br />Near CHUB, Rwanda</span>
+                <span className="text-gray-400">
+                  {t('footer.address.line1')}
+                  <br />
+                  {t('footer.address.line2')}
+                </span>
               </li>
               <li className="flex items-start gap-3 text-sm">
                 <FaPhone className="text-[#E06D20] mt-1 flex-shrink-0" />
                 <span className="text-gray-400">
                   <a href="tel:+250793929136" className="hover:text-white transition">0793929136</a>
                   <br />
-                  <span className="text-xs opacity-60">24/7 Emergency Hotline</span>
+                  <span className="text-xs opacity-60">{t('footer.available247')}</span>
                 </span>
               </li>
               <li className="flex items-start gap-3 text-sm">
@@ -107,9 +139,9 @@ function Footer() {
               <li className="flex items-start gap-3 text-sm">
                 <FaClock className="text-[#E06D20] mt-1 flex-shrink-0" />
                 <span className="text-gray-400">
-                  Mon-Sat: 7:00 AM – 8:00 PM
+                  {t('footer.hours.weekday')}
                   <br />
-                  <span className="text-xs opacity-60">Sundays: Emergencies Only</span>
+                  <span className="text-xs opacity-60">{t('footer.hours.sunday')}</span>
                 </span>
               </li>
             </ul>
@@ -117,33 +149,35 @@ function Footer() {
 
           {/* Newsletter */}
           <div>
-            <h4 className="text-lg font-semibold mb-6">Stay Updated</h4>
+            <h4 className="text-lg font-semibold mb-6">{t('footer.stay')}</h4>
             <p className="text-gray-400 text-sm mb-4">
-              Subscribe to receive health tips and clinic updates.
+              {t('footer.subscribeText')}
             </p>
             <form onSubmit={handleSubscribe} className="flex flex-col gap-3">
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Your email address"
+                placeholder={t('footer.emailPh')}
+                aria-label={t('footer.emailPh')}
                 className="bg-white/10 border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#E06D20] transition"
                 required
               />
-              <button 
+              <button
                 type="submit"
                 className="bg-[#E06D20] hover:bg-[#c95f1a] transition px-4 py-3 rounded-lg font-semibold text-sm"
               >
-                {subscribed ? '✓ Subscribed!' : 'Subscribe'}
+                {subscribed ? t('footer.subscribed') : t('footer.subscribe')}
               </button>
             </form>
             <div className="mt-6 p-4 bg-[#3B6B66]/10 rounded-lg border border-[#3B6B66]/20">
               <div className="flex items-center gap-2">
                 <FaAmbulance className="text-[#E06D20]" />
-                <span className="text-sm font-medium">24/7 Emergency</span>
+                <span className="text-sm font-medium">{t('footer.emergency24')}</span>
               </div>
               <p className="text-xs text-gray-400 mt-1">
-                Call our emergency desk anytime: <strong className="text-white">0793929136</strong>
+                {t('footer.emergencyHelp')}{' '}
+                <strong className="text-white">0793929136</strong>
               </p>
             </div>
           </div>
@@ -152,21 +186,22 @@ function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2 text-sm text-gray-400">
-            <span>© 2026 Sangwa Polyclinic</span>
+            <span>{t('footer.copyright')}</span>
             <span className="hidden md:inline">·</span>
             <span className="flex items-center gap-1">
-              Made with <FaHeart className="text-red-500 text-xs" /> in Rwanda
+              {t('footer.madeWith')}{' '}
+              <FaHeart className="text-red-500 text-xs" /> {t('footer.inRwanda')}
             </span>
           </div>
           <div className="flex items-center gap-6 text-xs text-gray-500">
-            <a href="#" className="hover:text-white transition">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition">Terms of Service</a>
-            <button 
+            <a href="#" className="hover:text-white transition">{t('footer.privacy')}</a>
+            <a href="#" className="hover:text-white transition">{t('footer.terms')}</a>
+            <button
               onClick={scrollToTop}
               className="flex items-center gap-2 hover:text-white transition"
             >
               <FaArrowUp />
-              Back to Top
+              {t('footer.top')}
             </button>
           </div>
         </div>

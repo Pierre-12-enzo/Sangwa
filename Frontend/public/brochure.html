@@ -1,0 +1,373 @@
+<!doctype html>
+<!--
+  Brochure — printable PDF-ready page for Sangwa Polyclinic.
+  Click "Download brochure (PDF)" in the site → opens this page →
+  triggers window.print() after fonts settle. The user gets the
+  browser's "Save as PDF" dialog.
+  Same data the site uses (services + contact info) so the brochure
+  never drifts from what's published.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sangwa Polyclinic — Brochure</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --teal-sage: #3b6b66;
+        --health-green: #1e6b43;
+        --med-orange: #e06d20;
+        --dark-slate: #0f172a;
+        --soft-white: #f8fafc;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font-family: 'Inter', system-ui, -apple-system, Segoe UI, sans-serif;
+        color: var(--dark-slate);
+        background: var(--soft-white);
+        -webkit-font-smoothing: antialiased;
+        line-height: 1.55;
+      }
+      .page {
+        max-width: 820px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 48px 56px 64px;
+      }
+      header.brand {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding-bottom: 24px;
+        border-bottom: 4px solid var(--teal-sage);
+      }
+      .brand-mark {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--teal-sage) 0%, var(--health-green) 100%);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 22px;
+        flex-shrink: 0;
+      }
+      .brand-name {
+        font-size: 26px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        margin: 0;
+      }
+      .brand-sub {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: var(--teal-sage);
+        font-weight: 600;
+        margin-top: 2px;
+      }
+      h1 {
+        font-size: 32px;
+        font-weight: 800;
+        margin: 32px 0 12px;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+      }
+      h1 .accent {
+        background: linear-gradient(135deg, var(--teal-sage), var(--health-green));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      h2 {
+        font-size: 18px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--teal-sage);
+        margin: 36px 0 16px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      p { margin: 0 0 12px; }
+      .lede {
+        font-size: 16px;
+        color: #475569;
+        max-width: 64ch;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin: 16px 0 8px;
+      }
+      .card {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 16px 18px;
+        background: #fff;
+      }
+      .card h3 {
+        font-size: 15px;
+        font-weight: 700;
+        margin: 0 0 6px;
+        color: var(--dark-slate);
+      }
+      .card p { font-size: 13px; color: #475569; margin: 0; }
+      .card ul { padding-left: 18px; margin: 8px 0 0; }
+      .card li { font-size: 13px; color: #475569; margin-bottom: 4px; }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin: 16px 0 8px;
+      }
+      .stat {
+        text-align: center;
+        background: var(--teal-sage);
+        color: #fff;
+        border-radius: 12px;
+        padding: 16px 8px;
+      }
+      .stat .n { font-size: 22px; font-weight: 800; }
+      .stat .l { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.85; margin-top: 4px; }
+      .contact {
+        background: var(--dark-slate);
+        color: #fff;
+        border-radius: 16px;
+        padding: 24px 28px;
+        margin-top: 32px;
+      }
+      .contact h2 {
+        color: #fff;
+        border-color: rgba(255, 255, 255, 0.15);
+        margin-top: 0;
+      }
+      .contact-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        font-size: 14px;
+      }
+      .contact-row strong { display: block; font-weight: 700; margin-bottom: 4px; }
+      .contact-row span { color: rgba(255, 255, 255, 0.7); }
+      .pill {
+        display: inline-block;
+        background: var(--med-orange);
+        color: #fff;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        margin-bottom: 8px;
+      }
+      footer.brand {
+        margin-top: 32px;
+        padding-top: 16px;
+        border-top: 1px solid #e2e8f0;
+        font-size: 11px;
+        color: #94a3b8;
+        text-align: center;
+      }
+      .toolbar {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        display: flex;
+        gap: 8px;
+        z-index: 10;
+      }
+      .toolbar button {
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 6px 20px -8px rgba(15, 23, 42, 0.3);
+      }
+      .toolbar .primary {
+        background: var(--med-orange);
+        color: #fff;
+      }
+      .toolbar .ghost {
+        background: #fff;
+        color: var(--dark-slate);
+        border: 1px solid #e2e8f0;
+      }
+
+      /* Print rules */
+      @media print {
+        body { background: #fff; }
+        .page { padding: 0; max-width: 100%; }
+        .toolbar { display: none; }
+        h1 { font-size: 26px; }
+        h2 { page-break-after: avoid; }
+        .card, .contact { page-break-inside: avoid; }
+        @page {
+          size: A4;
+          margin: 14mm 14mm 16mm;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <button class="ghost" onclick="window.close()">Close</button>
+      <button class="primary" onclick="window.print()">Save as PDF / Print</button>
+    </div>
+
+    <div class="page">
+      <header class="brand">
+        <div class="brand-mark">S</div>
+        <div>
+          <h2 class="brand-name" style="font-size:22px; margin:0; border:0; padding:0; text-transform:none; letter-spacing:0; color:var(--dark-slate);">Sangwa Polyclinic</h2>
+          <div class="brand-sub">Ngoma · Huye · Rwanda</div>
+        </div>
+      </header>
+
+      <h1>
+        Quality healthcare,<br />
+        <span class="accent">close to home.</span>
+      </h1>
+      <p class="lede">
+        Sangwa Polyclinic is a specialised maternity, paediatric, and internal
+        medicine practice serving families across the Southern Province.
+        Founded in late 2023 near CHUB in Huye, we combine international
+        standards of care with the warmth of Rwandan hospitality — so you
+        don't have to travel to Kigali for world-class treatment.
+      </p>
+
+      <h2>Our Services</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Obstetrics &amp; Maternity</h3>
+          <p>Specialised delivery suites, prenatal and postnatal care.</p>
+          <ul>
+            <li>Private delivery rooms</li>
+            <li>Family accommodation</li>
+            <li>24/7 midwife support</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Internal Medicine</h3>
+          <p>Diagnosis and ongoing management of adult conditions.</p>
+          <ul>
+            <li>Chronic disease management</li>
+            <li>Preventive care</li>
+            <li>Health screenings</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Pediatrics</h3>
+          <p>Compassionate care for infants, children, and adolescents.</p>
+          <ul>
+            <li>Developmental screenings</li>
+            <li>Vaccinations</li>
+            <li>Growth monitoring</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Inpatient Amenities</h3>
+          <p>On-site dining, private lockers, comfortable rooms.</p>
+          <ul>
+            <li>Nutritious meals</li>
+            <li>Private lockers</li>
+            <li>Comfortable rooms</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Laboratory Services</h3>
+          <p>On-site diagnostics with rapid results.</p>
+          <ul>
+            <li>Blood tests</li>
+            <li>Urinalysis</li>
+            <li>Microbiology</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Pharmacy</h3>
+          <p>Fully-stocked dispensary with prescribed medications.</p>
+          <ul>
+            <li>Prescription filling</li>
+            <li>Medication counselling</li>
+            <li>Health products</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Why families choose Sangwa</h2>
+      <div class="grid">
+        <div class="card"><h3>Compassionate care</h3><p>Personalised attention in a warm, supportive environment.</p></div>
+        <div class="card"><h3>Expert specialists</h3><p>Years of experience in maternity, pediatrics, and internal medicine.</p></div>
+        <div class="card"><h3>Minimal wait times</h3><p>Efficient scheduling — less time waiting, more time healing.</p></div>
+        <div class="card"><h3>Multilingual staff</h3><p>We speak Kinyarwanda, French, and English.</p></div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="n">500+</div><div class="l">Patients</div></div>
+        <div class="stat"><div class="n">98%</div><div class="l">Satisfaction</div></div>
+        <div class="stat"><div class="n">24/7</div><div class="l">Emergency</div></div>
+        <div class="stat"><div class="n">15min</div><div class="l">Avg. wait</div></div>
+      </div>
+
+      <div class="contact">
+        <span class="pill">Visit · Call · Book online</span>
+        <h2>Contact &amp; Hours</h2>
+        <div class="contact-row">
+          <div>
+            <strong>Address</strong>
+            <span>
+              Ngoma Sector, Huye District<br />
+              Near CHUB, Rwanda
+            </span>
+          </div>
+          <div>
+            <strong>Hours</strong>
+            <span>
+              Mon – Sat: 7:00 AM – 8:00 PM<br />
+              Sundays: Emergencies only
+            </span>
+          </div>
+          <div>
+            <strong>Emergency</strong>
+            <span>
+              24/7 hotline: <strong style="color:#fff;">079 392 9136</strong><br />
+              info@sangwapolyclinic.com
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <footer class="brand">
+        © 2026 Sangwa Polyclinic · Made with care in Rwanda · www.sangwapolyclinic.com
+      </footer>
+    </div>
+
+    <script>
+      // Auto-open the print dialog when the page lands, so the user
+      // gets the "Save as PDF" choice immediately. Suppressed if the
+      // page was opened with ?silent=1 (e.g. for previewing).
+      if (window.location.search.indexOf('silent=1') === -1) {
+        window.addEventListener('load', function () {
+          // Defer one tick so fonts swap in cleanly first.
+          setTimeout(function () {
+            try { window.print(); } catch (e) { /* user can still use the toolbar */ }
+          }, 350);
+        });
+      }
+    </script>
+  </body>
+</html>

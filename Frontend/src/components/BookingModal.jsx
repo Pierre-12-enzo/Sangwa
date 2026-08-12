@@ -1,6 +1,6 @@
 // frontend/src/components/BookingModal.jsx
 import React, { useState } from 'react';
-import { FaTimes, FaCalendarDay, FaUser, FaPhone, FaEnvelope, FaStethoscope, FaComment, FaCheckCircle } from 'react-icons/fa';
+import { FaTimes, FaCalendarDay, FaUser, FaPhone, FaClock, FaEnvelope, FaStethoscope, FaComment, FaCheckCircle } from 'react-icons/fa';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 

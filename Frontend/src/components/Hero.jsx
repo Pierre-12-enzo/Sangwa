@@ -2,8 +2,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { FaCalendarPlus, FaPhone, FaShieldAlt, FaArrowRight } from 'react-icons/fa';
 import heroReal from '../assets/hero-real.jpg';
+import { useI18n } from '../i18n/I18nProvider';
 
 function Hero({ onBookingClick }) {
+    const { t } = useI18n();
     const photoRef = useRef(null);
 
     // Simple parallax
@@ -47,7 +49,7 @@ function Hero({ onBookingClick }) {
                         <div className="reveal-up-on-load">
                             <span className="inline-flex items-center gap-2 glass border-white/25 px-4 py-2 rounded-full text-xs font-semibold tracking-widest uppercase">
                                 <FaShieldAlt className="text-med-orange" />
-                                Founded 2023 · Near CHUB
+                                {t('hero.badge')}
                             </span>
                         </div>
 
@@ -55,16 +57,16 @@ function Hero({ onBookingClick }) {
                         <div className="mt-auto max-w-2xl">
                             {/* SHORTER HEADLINE */}
                             <h1 className="reveal-up-on-load delay-100 text-3xl my-5 sm:text-5xl lg:text-5xl xl:text-6xl font-extrabold leading-[1.02] tracking-[-0.02em]">
-                                Finally, Quality
+                                {t('hero.headline.line1')}
                                 <br />
-                                Healthcare Without
+                                {t('hero.headline.line2')}
                                 <br />
-                                <span className="text-[#3B6B66]">the Kigali Trip.</span>
+                                <span className="text-[#3B6B66]">{t('hero.headline.accent')}</span>
                             </h1>
 
                             {/* ONE SENTENCE subtext */}
                             <p className="reveal-up-on-load delay-200 mt-6 text-base md:text-lg text-white/80 leading-relaxed max-w-xl">
-                                Specialized maternity, pediatric, and internal medicine care for Huye families.
+                                {t('hero.subtext')}
                             </p>
 
                             {/* CTAs - Clear hierarchy */}
@@ -74,7 +76,7 @@ function Hero({ onBookingClick }) {
                                     className="group inline-flex items-center justify-center gap-3 bg-gradient-to-r from-med-orange to-[#c95f1a] hover:shadow-2xl hover:shadow-orange-900/40 text-white font-semibold px-8 py-4 rounded-full transition-all duration-300 hover:-translate-y-0.5 text-base shadow-lg shadow-orange-900/30"
                                 >
                                     <FaCalendarPlus />
-                                    Book Appointment
+                                    {t('hero.cta.book')}
                                     <FaArrowRight className="transition-transform group-hover:translate-x-1" />
                                 </button>
 
@@ -83,7 +85,7 @@ function Hero({ onBookingClick }) {
                                     className="inline-flex items-center justify-center gap-3 glass-light text-white/90 hover:bg-white/20 px-7 py-4 rounded-full font-semibold transition-all duration-300 hover:-translate-y-0.5 border border-white/20"
                                 >
                                     <FaPhone className="text-med-orange" />
-                                    Emergency Desk
+                                    {t('hero.cta.emergency')}
                                 </a>
                             </div>
                         </div>
@@ -114,12 +116,12 @@ function Hero({ onBookingClick }) {
                         {/* Label */}
                         <div className="reveal-up-on-load delay-200">
                             <p className="text-med-orange font-bold uppercase tracking-[0.25em] text-xs md:text-sm">
-                                Polyclinic · Huye
+                                {t('hero.right.label')}
                             </p>
                             <h2 className="mt-3 text-2xl md:text-3xl font-extrabold leading-tight">
-                                Trusted by families
+                                {t('hero.right.headline.line1')}
                                 <br />
-                                across Southern Province.
+                                {t('hero.right.headline.line2')}
                             </h2>
                         </div>
 
@@ -128,19 +130,19 @@ function Hero({ onBookingClick }) {
                             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/15 text-center">
                                 <p className="text-2xl md:text-3xl font-extrabold">500+</p>
                                 <p className="text-[10px] uppercase tracking-widest text-white/75 mt-1">
-                                    Patients
+                                    {t('hero.stat.patients')}
                                 </p>
                             </div>
                             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/15 text-center">
                                 <p className="text-2xl md:text-3xl font-extrabold">98%</p>
                                 <p className="text-[10px] uppercase tracking-widest text-white/75 mt-1">
-                                    Satisfaction
+                                    {t('hero.stat.satisfaction')}
                                 </p>
                             </div>
                             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/15 text-center">
                                 <p className="text-2xl md:text-3xl font-extrabold">24/7</p>
                                 <p className="text-[10px] uppercase tracking-widest text-white/75 mt-1">
-                                    Emergency
+                                    {t('hero.stat.emergency')}
                                 </p>
                             </div>
                         </div>
@@ -152,9 +154,9 @@ function Hero({ onBookingClick }) {
                         >
                             <div>
                                 <p className="text-[10px] uppercase tracking-[0.25em] text-white/80">
-                                    Call 24/7
+                                    {t('hero.callCta.eyebrow')}
                                 </p>
-                                <p className="text-lg font-extrabold">+250 793 929 136</p>
+                                <p className="text-lg font-extrabold">{t('hero.callCta.number')}</p>
                             </div>
                             <FaPhone className="text-xl group-hover:rotate-12 transition-transform" />
                         </a>

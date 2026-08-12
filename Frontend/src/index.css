@@ -513,17 +513,21 @@
     stroke-dashoffset: 100;
     opacity: 0.4;
   }
+
   12% {
     opacity: 1;
   }
+
   68% {
     stroke-dashoffset: 0;
     opacity: 1;
   }
+
   88% {
     stroke-dashoffset: 0;
     opacity: 1;
   }
+
   100% {
     stroke-dashoffset: 0;
     opacity: 0;
@@ -589,19 +593,24 @@
 }
 
 @keyframes bpmBeat {
+
   0%,
   100% {
     transform: scale(1);
   }
+
   12% {
     transform: scale(1.28);
   }
+
   24% {
     transform: scale(1);
   }
+
   36% {
     transform: scale(1.28);
   }
+
   48% {
     transform: scale(1);
   }
@@ -637,6 +646,7 @@
     opacity: 0;
     transform: translateY(60%);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -701,6 +711,7 @@
   .testimonials-arrow--left {
     left: 0px;
   }
+
   .testimonials-arrow--right {
     right: 0px;
   }
@@ -711,9 +722,11 @@
     width: 44px;
     height: 44px;
   }
+
   .testimonials-arrow--left {
     left: -4px;
   }
+
   .testimonials-arrow--right {
     right: -4px;
   }
@@ -724,9 +737,11 @@
     width: 48px;
     height: 48px;
   }
+
   .testimonials-arrow--left {
     left: -8px;
   }
+
   .testimonials-arrow--right {
     right: -8px;
   }
@@ -832,14 +847,42 @@
 
 /* Accessibility: Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
+
   .ecg-trace,
   .ecg-divider,
   .bpm-heart,
   .index-pop {
     animation: none !important;
   }
+
   .ecg-trace,
   .ecg-divider {
     stroke-dashoffset: 0;
+  }
+}
+
+/* ===== LiveChatWidget panel pop animation ===== */
+@keyframes chatPop {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ===== Fix for testimonial card text truncation ===== */
+.testimonial-card blockquote {
+  word-break: break-word;
+}
+
+/* ===== Fix for mobile chat widget z-index ===== */
+@media (max-width: 640px) {
+  .chat-panel {
+    max-height: 85vh !important;
+    height: 85vh !important;
   }
 }

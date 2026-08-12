@@ -2,8 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { FaPhone, FaCalendarCheck, FaBars, FaTimes } from 'react-icons/fa';
 import heroReal from '../assets/hero-real.jpg';
+import LanguageToggle from './LanguageToggle';
+import { useI18n } from '../i18n/I18nProvider';
 
 function Navbar({ onBookingClick, heroStickyHeight = 0 }) {
+    const { t } = useI18n();
     const [isOpen, setIsOpen] = useState(false);
     const [solid, setSolid] = useState(false);
 
@@ -42,7 +45,7 @@ function Navbar({ onBookingClick, heroStickyHeight = 0 }) {
     return (
         <nav
             className={rootClass}
-            
+
         >
             <div className="max-w-7xl mx-auto px-4 md:px-8 py-3.5 flex justify-between items-center">
                 {/* Logo */}
@@ -74,26 +77,25 @@ function Navbar({ onBookingClick, heroStickyHeight = 0 }) {
                 </a>
 
                 {/* Desktop nav */}
-                <div className="hidden md:flex items-center gap-7 text-sm font-medium">
+                <div className="hidden md:flex items-center gap-5 lg:gap-7 text-sm font-medium">
                     <a href="#about" className={linkBase}>
-                        About
+                        {t('nav.about')}
                     </a>
                     <a href="#services" className={linkBase}>
-                        Services
-                    </a>
-                    <a href="#team" className={linkBase}>
-                        Team
+                        {t('nav.services')}
                     </a>
                     <a href="#testimonials" className={linkBase}>
-                        Testimonials
+                        {t('nav.testimonials')}
                     </a>
                     <a href="#contact" className={linkBase}>
-                        Contact
+                        {t('nav.contact')}
                     </a>
+
+                    <LanguageToggle />
 
                     <a href="tel:+250793929136" className={callBtn}>
                         <FaPhone className="text-xs" />
-                        <span>0793 929 136</span>
+                        <span>{t('nav.call')}</span>
                     </a>
 
                     <button
@@ -101,7 +103,7 @@ function Navbar({ onBookingClick, heroStickyHeight = 0 }) {
                         className={`${bookBtn} text-white`}
                     >
                         <FaCalendarCheck />
-                        <span>Book Now</span>
+                        <span>{t('nav.book')}</span>
                     </button>
                 </div>
 
@@ -117,7 +119,7 @@ function Navbar({ onBookingClick, heroStickyHeight = 0 }) {
 
             {/* Mobile panel */}
             <div
-                className={`md:hidden overflow-hidden transition-all duration-500 ease-out ${isOpen ? 'max-h-[460px] opacity-100' : 'max-h-0 opacity-0'
+                className={`md:hidden overflow-hidden transition-all duration-500 ease-out ${isOpen ? 'max-h-[520px] opacity-100' : 'max-h-0 opacity-0'
                     }`}
             >
                 <div className="px-4 pb-5 pt-3 mx-3 mb-3 rounded-2xl bg-dark-slate/90 backdrop-blur-xl border border-white/15 space-y-1 text-sm font-medium text-white">
@@ -126,43 +128,41 @@ function Navbar({ onBookingClick, heroStickyHeight = 0 }) {
                         onClick={handleLinkClick}
                         className="block px-4 py-2.5 rounded-xl hover:bg-white/15 transition"
                     >
-                        About
+                        {t('nav.about')}
                     </a>
                     <a
                         href="#services"
                         onClick={handleLinkClick}
                         className="block px-4 py-2.5 rounded-xl hover:bg-white/15 transition"
                     >
-                        Services
-                    </a>
-                    <a
-                        href="#team"
-                        onClick={handleLinkClick}
-                        className="block px-4 py-2.5 rounded-xl hover:bg-white/15 transition"
-                    >
-                        Team
+                        {t('nav.services')}
                     </a>
                     <a
                         href="#testimonials"
                         onClick={handleLinkClick}
                         className="block px-4 py-2.5 rounded-xl hover:bg-white/15 transition"
                     >
-                        Testimonials
+                        {t('nav.testimonials')}
                     </a>
                     <a
                         href="#contact"
                         onClick={handleLinkClick}
                         className="block px-4 py-2.5 rounded-xl hover:bg-white/15 transition"
                     >
-                        Contact
+                        {t('nav.contact')}
                     </a>
+
+                    {/* Language toggle, mobile */}
+                    <div className="pt-2 pb-1">
+                        <LanguageToggle />
+                    </div>
 
                     <a
                         href="tel:+250793929136"
                         className="mt-2 flex items-center justify-center gap-2 bg-med-orange hover:bg-[#c95f1a] px-4 py-3 rounded-full font-semibold transition"
                     >
                         <FaPhone />
-                        <span>Emergency Desk</span>
+                        <span>{t('nav.emergencyMobile')}</span>
                     </a>
 
                     <button
@@ -173,7 +173,7 @@ function Navbar({ onBookingClick, heroStickyHeight = 0 }) {
                         className="w-full border border-white/80 hover:bg-white hover:text-teal-sage px-4 py-3 rounded-full font-semibold transition flex items-center justify-center gap-2"
                     >
                         <FaCalendarCheck />
-                        Book Appointment
+                        {t('hero.cta.book')}
                     </button>
                 </div>
             </div>

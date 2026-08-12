@@ -15,6 +15,7 @@ import {
   FaCalendarAlt,
   FaCheck,
 } from 'react-icons/fa';
+import { useI18n } from '../i18n/I18nProvider';
 
 const TESTIMONIALS = [
   {
@@ -71,6 +72,7 @@ const ECG_PATH =
   'M0 28 L150 28 Q162 12 174 28 L210 28 L222 34 L236 6 L252 50 L266 28 L302 28 Q320 8 338 28 L520 28 Q532 12 544 28 L580 28 L592 34 L606 6 L622 50 L636 28 L672 28 Q690 8 708 28 L1000 28';
 
 function Testimonials() {
+  const { t } = useI18n();
   const [activeIndex, setActiveIndex] = useState(0);
   const swiperRef = useRef(null);
   const barRef = useRef(null);
@@ -120,14 +122,15 @@ function Testimonials() {
         <div className="text-center mb-10 md:mb-12 lg:mb-14">
           <div className="inline-flex items-center gap-2 bg-[#1E6B43]/10 text-[#1E6B43] px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold mb-3 md:mb-4">
             <FaStar className="text-xs md:text-sm" />
-            <span>Patient Stories</span>
+            <span>{t('test.badge')}</span>
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#0F172A] mb-3 md:mb-4">
-            What Our <span className="gradient-text">Patients</span> Say
+            {t('test.headline.line1')}{' '}
+            <span className="gradient-text">{t('test.headline.accent')}</span>{' '}
+            {t('test.headline.line2')}
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto text-sm md:text-base">
-            Real stories from real patients who found compassionate care at
-            Sangwa Polyclinic.
+            {t('test.subtext')}
           </p>
           <svg
             className="mx-auto mt-4 md:mt-5 lg:mt-6 w-32 md:w-40 lg:w-44 h-4 md:h-5 lg:h-6"
@@ -249,7 +252,7 @@ function Testimonials() {
                           data-swiper-parallax="-30"
                         >
                           <span className="text-[10px] md:text-[11px] font-extrabold tracking-[0.25em] text-[#0F172A]/35 uppercase">
-                            Patient · {String(i + 1).padStart(2, '0')}/
+                            {t('generic.patientIndex')} · {String(i + 1).padStart(2, '0')}/
                             {String(TESTIMONIALS.length).padStart(2, '0')}
                           </span>
                           <span
@@ -322,7 +325,7 @@ function Testimonials() {
                             </div>
                           </div>
                           <span className="hidden sm:inline-flex text-[10px] font-bold tracking-[0.2em] uppercase text-[#0F172A]/30 flex-shrink-0">
-                            Verified
+                            {t('test.verified')}
                           </span>
                         </footer>
                       </div>
@@ -376,7 +379,7 @@ function Testimonials() {
             <div className="lg:sticky lg:top-28">
               <p className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-[#0F172A]/50 mb-3 md:mb-4">
                 <FaHeartbeat className="bpm-heart text-[#E06D20] text-xs md:text-sm" />
-                Rostered this quarter
+                {t('test.rosterTitle')}
               </p>
               <ul className="space-y-1.5 md:space-y-2 testimonials-rail">
                 {TESTIMONIALS.map((t, i) => {
@@ -431,7 +434,7 @@ function Testimonials() {
                   ))}
                 </div>
                 <p className="text-gray-500 text-[10px] sm:text-xs">
-                  <strong className="text-[#0F172A]">4.9★</strong> avg · 50+ reviews
+                  <strong className="text-[#0F172A]">4.9★</strong> {t('generic.reviewLabel')}
                 </p>
               </div>
             </div>
