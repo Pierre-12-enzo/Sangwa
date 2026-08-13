@@ -101,7 +101,36 @@ function Testimonials() {
   const next = () => swiperRef.current?.slideNext();
   const prev = () => swiperRef.current?.slidePrev();
 
+  // Helper function to safely get translation strings
+  const getTranslation = (key, fallback = '') => {
+    if (!t) return fallback;
+    // Handle nested keys like 'test.badge'
+    const keys = key.split('.');
+    let value = t;
+    for (const k of keys) {
+      if (value && typeof value === 'object' && k in value) {
+        value = value[k];
+      } else {
+        return fallback;
+      }
+    }
+    return value || fallback;
+  };
+
   if (!isClient) return null;
+
+  // Default translations if not available
+  const translations = {
+    badge: getTranslation('test.badge', 'Patient Stories'),
+    headlineLine1: getTranslation('test.headline.line1', 'What Our'),
+    headlineAccent: getTranslation('test.headline.accent', 'Patients'),
+    headlineLine2: getTranslation('test.headline.line2', 'Say'),
+    subtext: getTranslation('test.subtext', 'Real experiences from our community'),
+    verified: getTranslation('test.verified', 'Verified'),
+    rosterTitle: getTranslation('test.rosterTitle', 'Patient Roster'),
+    patientIndex: getTranslation('generic.patientIndex', 'Patient'),
+    reviewLabel: getTranslation('generic.reviewLabel', 'from reviews'),
+  };
 
   return (
     <section
@@ -122,15 +151,15 @@ function Testimonials() {
         <div className="text-center mb-10 md:mb-12 lg:mb-14">
           <div className="inline-flex items-center gap-2 bg-[#1E6B43]/10 text-[#1E6B43] px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold mb-3 md:mb-4">
             <FaStar className="text-xs md:text-sm" />
-            <span>{t('test.badge')}</span>
+            <span>{translations.badge}</span>
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#0F172A] mb-3 md:mb-4">
-            {t('test.headline.line1')}{' '}
-            <span className="gradient-text">{t('test.headline.accent')}</span>{' '}
-            {t('test.headline.line2')}
+            {translations.headlineLine1}{' '}
+            <span className="gradient-text">{translations.headlineAccent}</span>{' '}
+            {translations.headlineLine2}
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto text-sm md:text-base">
-            {t('test.subtext')}
+            {translations.subtext}
           </p>
           <svg
             className="mx-auto mt-4 md:mt-5 lg:mt-6 w-32 md:w-40 lg:w-44 h-4 md:h-5 lg:h-6"
@@ -200,7 +229,7 @@ function Testimonials() {
                 onAutoplayTimeLeft={onAutoplayTimeLeft}
                 className="testimonials-swiper px-6 sm:px-8 md:px-10"
               >
-                {TESTIMONIALS.map((t, i) => (
+                {TESTIMONIALS.map((testimonial, i) => (
                   <SwiperSlide key={i} className="!h-auto">
                     <article className="testimonial-card w-full max-w-full mx-auto">
                       {/* ECG Strip */}
@@ -252,14 +281,14 @@ function Testimonials() {
                           data-swiper-parallax="-30"
                         >
                           <span className="text-[10px] md:text-[11px] font-extrabold tracking-[0.25em] text-[#0F172A]/35 uppercase">
-                            {t('generic.patientIndex')} · {String(i + 1).padStart(2, '0')}/
+                            {translations.patientIndex} · {String(i + 1).padStart(2, '0')}/
                             {String(TESTIMONIALS.length).padStart(2, '0')}
                           </span>
                           <span
                             className="text-[10px] md:text-[11px] font-bold uppercase tracking-wider px-2.5 md:px-3 py-1 md:py-1.5 rounded-full text-white shrink-0"
-                            style={{ backgroundColor: t.serviceColor }}
+                            style={{ backgroundColor: testimonial.serviceColor }}
                           >
-                            {t.service}
+                            {testimonial.service}
                           </span>
                         </div>
 
@@ -268,7 +297,7 @@ function Testimonials() {
                           className="text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed text-[#0F172A] font-medium mb-3 md:mb-4"
                           data-swiper-parallax="-50"
                         >
-                          “{t.text}”
+                          “{testimonial.text}”
                         </blockquote>
 
                         {/* Vitals */}
@@ -277,20 +306,20 @@ function Testimonials() {
                           data-swiper-parallax="-40"
                         >
                           <span className="inline-flex items-center gap-1 bg-amber-50 border border-amber-200/70 rounded-full px-2.5 md:px-3 py-1 md:py-1.5">
-                            {[...Array(t.rating)].map((_, j) => (
+                            {[...Array(testimonial.rating)].map((_, j) => (
                               <FaStar key={j} className="text-amber-400 text-[10px] md:text-xs" />
                             ))}
                             <span className="text-[10px] md:text-xs font-extrabold text-amber-600 ml-0.5 md:ml-1">
-                              {t.rating}.0
+                              {testimonial.rating}.0
                             </span>
                           </span>
                           <span className="vitals-chip">
                             <FaHeartbeat className="bpm-heart text-[#E06D20] text-[10px] md:text-xs" />
-                            <span className="text-[10px] md:text-xs">{t.bpm} BPM · {t.mood}</span>
+                            <span className="text-[10px] md:text-xs">{testimonial.bpm} BPM · {testimonial.mood}</span>
                           </span>
                           <span className="vitals-chip">
                             <FaCalendarAlt className="text-[#3B6B66] text-[10px] md:text-xs" />
-                            <span className="text-[10px] md:text-xs">{t.visit}</span>
+                            <span className="text-[10px] md:text-xs">{testimonial.visit}</span>
                           </span>
                         </div>
 
@@ -304,11 +333,11 @@ function Testimonials() {
                               <div
                                 className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center text-white text-base md:text-lg lg:text-xl font-extrabold"
                                 style={{
-                                  background: `linear-gradient(135deg, ${t.serviceColor} 0%, #0F172A 100%)`,
+                                  background: `linear-gradient(135deg, ${testimonial.serviceColor} 0%, #0F172A 100%)`,
                                 }}
                                 aria-hidden="true"
                               >
-                                {t.initial}
+                                {testimonial.initial}
                               </div>
                               <span className="absolute -bottom-0.5 -right-0.5 md:-bottom-1 md:-right-1 w-4 h-4 md:w-5 md:h-5 rounded-full bg-[#1E6B43] ring-2 ring-white flex items-center justify-center">
                                 <FaCheck className="text-white text-[7px] md:text-[9px]" />
@@ -316,16 +345,16 @@ function Testimonials() {
                             </div>
                             <div className="min-w-0">
                               <p className="font-bold text-[#0F172A] text-sm sm:text-base md:text-lg leading-tight truncate">
-                                {t.name}
+                                {testimonial.name}
                               </p>
                               <p className="text-gray-500 text-xs sm:text-sm flex items-center gap-1 md:gap-1.5">
                                 <FaMapMarkerAlt className="text-[#E06D20] text-[10px] md:text-xs flex-shrink-0" />
-                                <span className="truncate">{t.location}</span>
+                                <span className="truncate">{testimonial.location}</span>
                               </p>
                             </div>
                           </div>
                           <span className="hidden sm:inline-flex text-[10px] font-bold tracking-[0.2em] uppercase text-[#0F172A]/30 flex-shrink-0">
-                            {t('test.verified')}
+                            {translations.verified}
                           </span>
                         </footer>
                       </div>
@@ -335,7 +364,7 @@ function Testimonials() {
                         <div
                           className="autoplay-bar"
                           style={{
-                            background: `linear-gradient(90deg, ${t.serviceColor} 0%, #E06D20 100%)`,
+                            background: `linear-gradient(90deg, ${testimonial.serviceColor} 0%, #E06D20 100%)`,
                           }}
                         />
                       </div>
@@ -379,7 +408,7 @@ function Testimonials() {
             <div className="lg:sticky lg:top-28">
               <p className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-[#0F172A]/50 mb-3 md:mb-4">
                 <FaHeartbeat className="bpm-heart text-[#E06D20] text-xs md:text-sm" />
-                {t('test.rosterTitle')}
+                {translations.rosterTitle}
               </p>
               <ul className="space-y-1.5 md:space-y-2 testimonials-rail">
                 {TESTIMONIALS.map((t, i) => {
@@ -434,7 +463,7 @@ function Testimonials() {
                   ))}
                 </div>
                 <p className="text-gray-500 text-[10px] sm:text-xs">
-                  <strong className="text-[#0F172A]">4.9★</strong> {t('generic.reviewLabel')}
+                  <strong className="text-[#0F172A]">4.9★</strong> {translations.reviewLabel}
                 </p>
               </div>
             </div>
