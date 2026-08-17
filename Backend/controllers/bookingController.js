@@ -13,7 +13,7 @@ const sdk = require('sib-api-v3-sdk');
 exports.createBooking = async (req, res) => {
   try {
     const bookingData = req.body;
-    
+
     // Validate phone number format
     if (!bookingData.phoneNumber) {
       return res.status(400).json({
@@ -31,21 +31,20 @@ exports.createBooking = async (req, res) => {
     try {
       const formattedPhone = formatPhoneNumber(booking.phoneNumber);
       const smsMessage = smsTemplates.confirmation(booking);
-      
+
       const result = await sms.send({
         to: [formattedPhone],
         message: smsMessage,
         from: process.env.AFRICASTALKING_SHORTCODE || 'SANGWA',
       });
-      
-      if (result.SMSMessageData.Recipients[0].status === 'Success') {
+
+      if (result.SMSMessageData?.Recipients?.[0]?.status === 'Success') {
         booking.smsSent = true;
         await booking.save();
         smsSent = true;
       }
     } catch (error) {
       console.error('❌ SMS Error:', error.message);
-      // Continue even if SMS fails - we'll retry later
     }
 
     // Send Email Confirmation (if email provided)
@@ -53,20 +52,20 @@ exports.createBooking = async (req, res) => {
     if (booking.email) {
       try {
         const emailTemplate = emailTemplates.confirmation(booking);
-        
-        const sendSmtpEmail = new sdk.SendSmtpEmail();
+
+        // ✅ Use correct Brevo SDK format
+        const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
         sendSmtpEmail.subject = emailTemplate.subject;
         sendSmtpEmail.htmlContent = emailTemplate.html;
         sendSmtpEmail.sender = emailConfig.sender;
         sendSmtpEmail.to = [{ email: booking.email, name: booking.patientName }];
-        
+
         await apiInstance.sendTransacEmail(sendSmtpEmail);
         booking.emailSent = true;
         await booking.save();
         emailSent = true;
       } catch (error) {
         console.error('❌ Email Error:', error.message);
-        // Continue even if email fails
       }
     }
 
@@ -96,7 +95,7 @@ exports.createBooking = async (req, res) => {
 exports.getAllBookings = async (req, res) => {
   try {
     const { status, startDate, endDate, service } = req.query;
-    
+
     // Build filter
     const filter = {};
     if (status) filter.status = status;
@@ -166,7 +165,7 @@ exports.updateBookingStatus = async (req, res) => {
     // Store old status for comparison
     const oldStatus = booking.status;
     booking.status = status;
-    
+
     // If confirming, send SMS and Email
     if (status === 'confirmed' && oldStatus !== 'confirmed') {
       // Send confirmation if not already sent
@@ -264,7 +263,7 @@ exports.getStats = async (req, res) => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 

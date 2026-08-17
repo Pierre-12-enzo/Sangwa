@@ -1,86 +1,49 @@
-require('dotenv').config();
+// server.js
+const app = require('./app');
+const connectDB = require('./config/database');
+const dotenv = require('dotenv');
 
-const mongoose = require('mongoose');
+// Load environment variables
+dotenv.config();
 
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const compression = require('compression');
-const mongoSanitize = require('express-mongo-sanitize');
-const rateLimit = require('express-rate-limit');
-
-const bookingRoutes = require('./routes/bookingRoutes');
-const authRoutes = require('./routes/authRoutes');
-const errorHandler = require('./middleware/errorHandler');
-
-const app = express();
-
-// ===== Security Middleware =====
-app.use(helmet());
-
-app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
-  credentials: true,
-}));
-
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Too many requests from this IP, please try again later.',
-});
-app.use('/api', limiter);
-
-// ===== Body Parsers =====
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
-
-// ===== Data Sanitization =====
-app.use(mongoSanitize());
-
-app.use(compression());
-
-// ===== API Routes =====
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    message: 'Sangwa Polyclinic API is running',
-    timestamp: new Date().toISOString(),
-  });
-});
-
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/auth', authRoutes);
-
-// ===== 404 Handler =====
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found',
-  });
-});
-
-// ===== Error Handler =====
-app.use(errorHandler);
-
-// ===== Database Connection & Server Start =====
+// ✅ Ensure PORT is defined
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGODB_URI;
 
-mongoose.connect(MONGO_URI)
-  .then(() => {
-    console.log('MongoDB connected successfully');
-    app.listen(PORT, () => {
-      console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error('MongoDB connection error:', err);
+// Connect to MongoDB
+connectDB();
+
+// ✅ Better error handling for server start
+const server = app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📚 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📍 http://localhost:${PORT}`);
+}).on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} is already in use. Please use a different port.`);
     process.exit(1);
-  });
+  } else {
+    console.error('❌ Server error:', err);
+    process.exit(1);
+  }
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.error('❌ Unhandled Rejection:', err);
+  server.close(() => process.exit(1));
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+  server.close(() => process.exit(1));
+});
 
 // Graceful shutdown
-process.on('SIGINT', async () => {
-  await mongoose.connection.close();
-  console.log('MongoDB connection closed');
-  process.exit(0);
+process.on('SIGTERM', () => {
+  console.log('🛑 SIGTERM received. Closing server...');
+  server.close(() => {
+    console.log('✅ Server closed');
+    process.exit(0);
+  });
 });

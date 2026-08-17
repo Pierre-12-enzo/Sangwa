@@ -7,32 +7,48 @@ import ServicesGrid from './components/ServicesGrid';
 import WhySangwa from './components/WhySangwa';
 import Testimonials from './components/Testimonials';
 import BookingModal from './components/BookingModal';
+//import EmergencyBanner from './components/EmergencyBanner';
 import Footer from './components/Footer';
 import AdminDashboard from './components/AdminDashboard';
+import AdminLogin from './components/AdminLogin';
 import AppLoader from './components/AppLoader';
-import VirtualTour from './components/VirtualTour';
-import ScrollToTop from './components/ScrollToTop';
-import LiveChatWidget from './components/LiveChatWidget';
-import EmergencyBar from './components/EmergencyBar';
 
 function App() {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [heroHeight, setHeroHeight] = useState(0);
+  const [loading, setLoading] = useState(true);
   const heroRef = useRef(null);
-  const [ready, setReady] = useState(true);
+
+  // Check if admin is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('sangwa_admin_token');
+    const user = localStorage.getItem('sangwa_admin_user');
+
+    if (token && user) {
+      setIsAuthenticated(true);
+    }
+
+    setLoading(false);
+  }, []);
 
   // Secret admin access: Ctrl+Shift+A
   useEffect(() => {
     const handleKeyPress = (e) => {
       if (e.ctrlKey && e.shiftKey && e.key === 'A') {
         e.preventDefault();
-        setShowAdmin(!showAdmin);
+        if (isAuthenticated) {
+          setShowAdmin(!showAdmin);
+        } else {
+          setShowAdminLogin(true);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [showAdmin]);
+  }, [isAuthenticated, showAdmin]);
 
   // Track hero height
   useEffect(() => {
@@ -44,6 +60,20 @@ function App() {
     return () => ro.disconnect();
   }, []);
 
+  // Handle successful login
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    setShowAdminLogin(false);
+    setShowAdmin(true);
+  };
+
+  // Handle admin close
+  const handleAdminClose = () => {
+    setShowAdmin(false);
+  };
+
+  if (loading) return <AppLoader label="Loading Sangwa…" />;
+
   return (
     <div className="min-h-screen">
       <Navbar
@@ -52,7 +82,7 @@ function App() {
       />
 
       {showAdmin ? (
-        <AdminDashboard onClose={() => setShowAdmin(false)} />
+        <AdminDashboard onClose={handleAdminClose} />
       ) : (
         <>
           <div ref={heroRef}>
@@ -62,9 +92,12 @@ function App() {
           <ServicesGrid />
           <WhySangwa />
           <Testimonials />
-          <VirtualTour />
           <Footer />
         </>
+      )}
+
+      {showAdminLogin && (
+        <AdminLogin onLoginSuccess={handleLoginSuccess} />
       )}
 
       <BookingModal
@@ -72,13 +105,10 @@ function App() {
         onClose={() => setIsBookingOpen(false)}
       />
 
-      {/* Always-on components */}
-      <LiveChatWidget />
-      <EmergencyBar onBookingClick={() => setIsBookingOpen(true)} />
-      <ScrollToTop />
+      {/* <EmergencyBanner /> */}
 
       {/* Admin hint */}
-      {process.env.NODE_ENV === 'development' && (
+      {process.env.NODE_ENV === 'development' && !showAdmin && !showAdminLogin && (
         <div className="fixed bottom-4 right-4 text-xs text-gray-400 opacity-30 bg-white/90 px-3 py-1 rounded-full shadow-soft">
           Ctrl+Shift+A for Admin
         </div>

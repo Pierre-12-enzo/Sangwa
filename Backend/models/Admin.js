@@ -43,14 +43,12 @@ const adminSchema = new mongoose.Schema(
   }
 );
 
-// Hash password before saving
-adminSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
-    return next();
+// ✅ Alternative: Async/await without calling next()
+adminSchema.pre('save', async function () {
+  if (this.isModified('password')) {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
   }
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
 
 // Compare password method

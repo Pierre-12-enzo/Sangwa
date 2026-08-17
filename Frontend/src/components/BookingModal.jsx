@@ -1,11 +1,13 @@
 // frontend/src/components/BookingModal.jsx
 import React, { useState } from 'react';
-import { FaTimes, FaCalendarDay, FaUser, FaPhone, FaClock, FaEnvelope, FaStethoscope, FaComment, FaCheckCircle } from 'react-icons/fa';
-import axios from 'axios';
+import { FaTimes,FaClock, FaCalendarDay, FaUser, FaPhone, FaEnvelope, FaStethoscope, FaComment, FaCheckCircle } from 'react-icons/fa';
+import { bookingAPI } from '../api/client';
 import toast from 'react-hot-toast';
 
 function BookingModal({ isOpen, onClose }) {
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookingReference, setBookingReference] = useState('');
   const [formData, setFormData] = useState({
     patientName: '',
     phoneNumber: '',
@@ -13,61 +15,102 @@ function BookingModal({ isOpen, onClose }) {
     service: '',
     preferredDate: '',
     preferredTime: '',
-    additionalNotes: ''
+    additionalNotes: '',
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const services = [
-    'Maternity', 'Internal Medicine', 'Pediatrics', 
-    'Gynecology', 'Laboratory', 'Pharmacy'
+    'Maternity',
+    'Internal Medicine',
+    'Pediatrics',
+    'Gynecology',
+    'Laboratory',
+    'Pharmacy',
+    'Dental',
+    'Ophthalmology',
+    'Orthopedics',
+    'Dermatology',
   ];
 
   const timeSlots = [
-    '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
-    '11:00', '11:30', '12:00', '14:00', '14:30', '15:00',
-    '15:30', '16:00', '16:30'
+    '08:00',
+    '08:30',
+    '09:00',
+    '09:30',
+    '10:00',
+    '10:30',
+    '11:00',
+    '11:30',
+    '12:00',
+    '14:00',
+    '14:30',
+    '15:00',
+    '15:30',
+    '16:00',
+    '16:30',
   ];
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // 🔥 UPDATED: Submit booking to backend
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
-      const response = await axios.post('http://localhost:5000/api/bookings', formData);
-      toast.success('✅ Appointment request received! Reception will confirm via SMS shortly.');
-      setStep(3); // Success step
-      setTimeout(() => {
-        onClose();
-        setStep(1);
-        setFormData({
-          patientName: '',
-          phoneNumber: '',
-          email: '',
-          service: '',
-          preferredDate: '',
-          preferredTime: '',
-          additionalNotes: ''
-        });
-        setIsSubmitting(false);
-      }, 3000);
+      const response = await bookingAPI.create(formData);
+
+      if (response.data.success) {
+        setBookingReference(response.data.data.booking.bookingReference);
+        setStep(3);
+        toast.success('✅ Appointment booked successfully!');
+
+        // Reset form after delay
+        setTimeout(() => {
+          setFormData({
+            patientName: '',
+            phoneNumber: '',
+            email: '',
+            service: '',
+            preferredDate: '',
+            preferredTime: '',
+            additionalNotes: '',
+          });
+          setStep(1);
+          setIsSubmitting(false);
+        }, 3000);
+      }
     } catch (error) {
-      toast.error('❌ Error booking appointment. Please try again.');
+      console.error('Booking Error:', error);
+      toast.error(error.response?.data?.message || '❌ Failed to book appointment. Please try again.');
       setIsSubmitting(false);
     }
+  };
+
+  // Reset when modal closes
+  const handleClose = () => {
+    setStep(1);
+    setFormData({
+      patientName: '',
+      phoneNumber: '',
+      email: '',
+      service: '',
+      preferredDate: '',
+      preferredTime: '',
+      additionalNotes: '',
+    });
+    setBookingReference('');
+    setIsSubmitting(false);
+    onClose();
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
-      
-      {/* Modal */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={handleClose}></div>
+
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-6 py-4 flex justify-between items-center z-10">
@@ -75,7 +118,7 @@ function BookingModal({ isOpen, onClose }) {
             <h2 className="text-2xl font-bold text-[#0F172A]">Book Appointment</h2>
             <p className="text-sm text-gray-500">Step {step} of 3</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition text-2xl">
+          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 transition text-2xl">
             <FaTimes />
           </button>
         </div>
@@ -84,11 +127,10 @@ function BookingModal({ isOpen, onClose }) {
         <div className="px-6 pt-4">
           <div className="flex gap-2">
             {[1, 2, 3].map((s) => (
-              <div 
+              <div
                 key={s}
-                className={`h-2 flex-1 rounded-full transition ${
-                  s <= step ? 'bg-[#3B6B66]' : 'bg-gray-200'
-                }`}
+                className={`h-2 flex-1 rounded-full transition ${s <= step ? 'bg-[#3B6B66]' : 'bg-gray-200'
+                  }`}
               ></div>
             ))}
           </div>
@@ -251,7 +293,17 @@ function BookingModal({ isOpen, onClose }) {
               <p className="text-gray-600">
                 We'll send a confirmation SMS to <strong>{formData.phoneNumber}</strong> shortly.
               </p>
-              <p className="text-sm text-gray-500 mt-2">Reference: #SANG{Date.now().toString().slice(-6)}</p>
+              {bookingReference && (
+                <p className="text-sm text-gray-500 mt-2">
+                  Reference: <strong className="text-[#3B6B66]">{bookingReference}</strong>
+                </p>
+              )}
+              <button
+                onClick={handleClose}
+                className="mt-6 bg-[#3B6B66] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#2d5450] transition"
+              >
+                Done
+              </button>
             </div>
           )}
         </form>

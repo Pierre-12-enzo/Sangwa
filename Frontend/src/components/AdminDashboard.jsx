@@ -1,53 +1,101 @@
 // frontend/src/components/AdminDashboard.jsx
 import React, { useState, useEffect } from 'react';
-import { FaTimes, FaSync, FaCheck, FaTimesCircle, FaTrash, FaClock } from 'react-icons/fa';
-import axios from 'axios';
+import {
+  FaTimes,
+  FaSync,
+  FaCheck,
+  FaTimesCircle,
+  FaTrash,
+  FaClock,
+  FaUsers,
+  FaCalendarCheck,
+  FaHourglassHalf,
+  FaCheckCircle,
+} from 'react-icons/fa';
+import { adminAPI, authAPI } from '../api/client';
 import toast from 'react-hot-toast';
 
 function AdminDashboard({ onClose }) {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ total: 0, pending: 0, confirmed: 0 });
+  const [stats, setStats] = useState({
+    total: 0,
+    pending: 0,
+    confirmed: 0,
+    completed: 0,
+    cancelled: 0,
+    today: 0,
+  });
+  const [admin, setAdmin] = useState(null);
 
-  const fetchBookings = async () => {
+  // 🔥 Load dashboard data
+  const loadDashboard = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/bookings');
-      setBookings(response.data.data);
-      const total = response.data.data.length;
-      const pending = response.data.data.filter(b => b.status === 'pending').length;
-      const confirmed = response.data.data.filter(b => b.status === 'confirmed').length;
-      setStats({ total, pending, confirmed });
+      // Get stats and bookings in parallel
+      const [statsRes, bookingsRes] = await Promise.all([
+        adminAPI.getStats(),
+        adminAPI.getBookings(),
+      ]);
+
+      setStats(statsRes.data.data);
+      setBookings(bookingsRes.data.data);
     } catch (error) {
-      toast.error('Failed to load bookings');
+      console.error('Error loading dashboard:', error);
+      toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
   };
 
+  // 🔥 Load admin profile
+  const loadAdminProfile = async () => {
+    try {
+      const response = await authAPI.getProfile();
+      setAdmin(response.data.data);
+    } catch (error) {
+      console.error('Error loading admin:', error);
+    }
+  };
+
   useEffect(() => {
-    fetchBookings();
+    loadDashboard();
+    loadAdminProfile();
+
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(loadDashboard, 30000);
+    return () => clearInterval(interval);
   }, []);
 
+  // 🔥 Update booking status
   const updateStatus = async (id, status) => {
     try {
-      await axios.put(`http://localhost:5000/api/bookings/${id}`, { status });
+      await adminAPI.updateStatus(id, status);
       toast.success(`Booking ${status}`);
-      fetchBookings();
+      loadDashboard();
     } catch (error) {
       toast.error('Failed to update status');
     }
   };
 
+  // 🔥 Delete booking
   const deleteBooking = async (id) => {
     if (!confirm('Delete this booking?')) return;
     try {
-      await axios.delete(`http://localhost:5000/api/bookings/${id}`);
+      await adminAPI.deleteBooking(id);
       toast.success('Booking deleted');
-      fetchBookings();
+      loadDashboard();
     } catch (error) {
       toast.error('Failed to delete');
     }
+  };
+
+  // 🔥 Logout
+  const handleLogout = () => {
+    authAPI.logout();
+    toast.success('Logged out');
+    onClose();
+    window.location.reload();
   };
 
   const getStatusColor = (status) => {
@@ -55,7 +103,8 @@ function AdminDashboard({ onClose }) {
       pending: 'bg-yellow-100 text-yellow-800',
       confirmed: 'bg-green-100 text-green-800',
       cancelled: 'bg-red-100 text-red-800',
-      completed: 'bg-blue-100 text-blue-800'
+      completed: 'bg-blue-100 text-blue-800',
+      'no-show': 'bg-gray-100 text-gray-800',
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
@@ -67,17 +116,27 @@ function AdminDashboard({ onClose }) {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h2 className="text-3xl font-bold text-[#0F172A]">Admin Dashboard</h2>
-            <p className="text-gray-500">Manage patient appointments</p>
+            {admin && (
+              <p className="text-gray-500">
+                Welcome back, {admin.name} • {admin.role}
+              </p>
+            )}
           </div>
           <div className="flex gap-3">
-            <button 
-              onClick={fetchBookings}
+            <button
+              onClick={handleLogout}
+              className="text-red-600 hover:text-red-800 px-4 py-2 rounded-lg border border-red-200 hover:bg-red-50 transition"
+            >
+              Logout
+            </button>
+            <button
+              onClick={loadDashboard}
               className="bg-[#3B6B66] text-white px-4 py-2 rounded-lg hover:bg-[#2d5450] transition flex items-center gap-2"
             >
               <FaSync className={loading ? 'animate-spin' : ''} />
               Refresh
             </button>
-            <button 
+            <button
               onClick={onClose}
               className="border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 transition"
             >
@@ -87,18 +146,72 @@ function AdminDashboard({ onClose }) {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           <div className="bg-white p-6 rounded-xl shadow-soft border border-gray-100">
-            <p className="text-sm text-gray-500">Total Bookings</p>
-            <p className="text-3xl font-bold text-[#0F172A]">{stats.total}</p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#3B6B66]/10 rounded-lg flex items-center justify-center text-[#3B6B66]">
+                <FaUsers />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-[#0F172A]">{stats.total}</p>
+                <p className="text-xs text-gray-500">Total</p>
+              </div>
+            </div>
           </div>
           <div className="bg-white p-6 rounded-xl shadow-soft border border-gray-100">
-            <p className="text-sm text-gray-500">Pending</p>
-            <p className="text-3xl font-bold text-yellow-600">{stats.pending}</p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center text-yellow-600">
+                <FaHourglassHalf />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-[#0F172A]">{stats.pending}</p>
+                <p className="text-xs text-gray-500">Pending</p>
+              </div>
+            </div>
           </div>
           <div className="bg-white p-6 rounded-xl shadow-soft border border-gray-100">
-            <p className="text-sm text-gray-500">Confirmed</p>
-            <p className="text-3xl font-bold text-green-600">{stats.confirmed}</p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600">
+                <FaCheckCircle />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-[#0F172A]">{stats.confirmed}</p>
+                <p className="text-xs text-gray-500">Confirmed</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-xl shadow-soft border border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                <FaCalendarCheck />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-[#0F172A]">{stats.completed}</p>
+                <p className="text-xs text-gray-500">Completed</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-xl shadow-soft border border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center text-red-600">
+                <FaTimesCircle />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-[#0F172A]">{stats.cancelled}</p>
+                <p className="text-xs text-gray-500">Cancelled</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-xl shadow-soft border border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#E06D20]/10 rounded-lg flex items-center justify-center text-[#E06D20]">
+                <FaClock />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-[#0F172A]">{stats.today}</p>
+                <p className="text-xs text-gray-500">Today</p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -131,6 +244,9 @@ function AdminDashboard({ onClose }) {
                       <td className="px-6 py-4">
                         <div className="font-medium text-[#0F172A]">{booking.patientName}</div>
                         <div className="text-sm text-gray-500">{booking.phoneNumber}</div>
+                        {booking.email && (
+                          <div className="text-xs text-gray-400">{booking.email}</div>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-sm">{booking.service}</td>
                       <td className="px-6 py-4 text-sm">
@@ -139,32 +255,44 @@ function AdminDashboard({ onClose }) {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(booking.status)}`}>
-                          {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                          {booking.status.charAt(0).toUpperCase() + booking.status.slice(1).replace('-', ' ')}
                         </span>
+                        <div className="text-xs text-gray-400 mt-1">
+                          Ref: {booking.bookingReference}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
                           {booking.status === 'pending' && (
                             <>
-                              <button 
+                              <button
                                 onClick={() => updateStatus(booking._id, 'confirmed')}
-                                className="text-green-600 hover:text-green-800 transition"
+                                className="text-green-600 hover:text-green-800 transition p-2 hover:bg-green-50 rounded-lg"
                                 title="Confirm"
                               >
                                 <FaCheck />
                               </button>
-                              <button 
+                              <button
                                 onClick={() => updateStatus(booking._id, 'cancelled')}
-                                className="text-red-600 hover:text-red-800 transition"
+                                className="text-red-600 hover:text-red-800 transition p-2 hover:bg-red-50 rounded-lg"
                                 title="Cancel"
                               >
                                 <FaTimesCircle />
                               </button>
                             </>
                           )}
-                          <button 
+                          {booking.status === 'confirmed' && (
+                            <button
+                              onClick={() => updateStatus(booking._id, 'completed')}
+                              className="text-blue-600 hover:text-blue-800 transition p-2 hover:bg-blue-50 rounded-lg"
+                              title="Mark Complete"
+                            >
+                              <FaCheckCircle />
+                            </button>
+                          )}
+                          <button
                             onClick={() => deleteBooking(booking._id)}
-                            className="text-gray-400 hover:text-red-600 transition"
+                            className="text-gray-400 hover:text-red-600 transition p-2 hover:bg-red-50 rounded-lg"
                             title="Delete"
                           >
                             <FaTrash />

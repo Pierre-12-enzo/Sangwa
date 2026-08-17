@@ -109,6 +109,9 @@ const bookingSchema = new mongoose.Schema(
   }
 );
 
+// ✅ REMOVE duplicate index - Only use schema.index()
+// bookingSchema.index({ bookingReference: 1 }); // ← REMOVE THIS
+
 // Generate booking reference before saving
 bookingSchema.pre('save', async function (next) {
   if (!this.bookingReference) {
@@ -139,9 +142,9 @@ bookingSchema.virtual('formattedTime').get(function () {
   return this.preferredTime;
 });
 
-// Index for faster queries
-bookingSchema.index({ status: 1, preferredDate: 1 });
+// ✅ Define indexes here (only once)
 bookingSchema.index({ bookingReference: 1 });
+bookingSchema.index({ status: 1, preferredDate: 1 });
 bookingSchema.index({ phoneNumber: 1 });
 
 module.exports = mongoose.model('Booking', bookingSchema);
