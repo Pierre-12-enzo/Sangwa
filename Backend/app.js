@@ -3,8 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
+// ❌ REMOVE: const mongoSanitize = require('express-mongo-sanitize');
 const rateLimit = require('express-rate-limit');
-const mongoSanitize = require('express-mongo-sanitize');
 
 const bookingRoutes = require('./routes/bookingRoutes');
 const authRoutes = require('./routes/authRoutes');
@@ -13,7 +13,6 @@ const errorHandler = require('./middleware/errorHandler');
 const app = express();
 
 // ===== Security Middleware =====
-// Helmet for security headers
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   crossOriginOpenerPolicy: { policy: "same-origin" },
@@ -29,8 +28,8 @@ app.use(cors({
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: 'Too many requests from this IP, please try again later.',
   skip: (req) => req.method === 'OPTIONS',
 });
@@ -40,15 +39,12 @@ app.use('/api', limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// ===== Data Sanitization =====
-app.use(mongoSanitize({
-  replaceWith: '_',
-}));
+// ❌ REMOVE: app.use(mongoSanitize());
 
 // Compression
 app.use(compression());
 
-// ===== Request Logging (Development) =====
+// ===== Request Logging =====
 if (process.env.NODE_ENV === 'development') {
   app.use((req, res, next) => {
     console.log(`📝 ${req.method} ${req.url}`);
@@ -63,7 +59,6 @@ app.get('/api/health', (req, res) => {
     message: 'Sangwa Polyclinic API is running',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
-    port: process.env.PORT || 5000,
   });
 });
 

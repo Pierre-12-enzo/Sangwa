@@ -1,9 +1,8 @@
 // src/config/brevo.js
 const SibApiV3Sdk = require('sib-api-v3-sdk');
 
-// Check if API key exists
 const apiKey = process.env.BREVO_API_KEY;
-const hasCredentials = apiKey && apiKey !== 'undefined';
+const hasCredentials = apiKey && apiKey !== 'undefined' && apiKey !== '';
 
 let apiInstance;
 const emailConfig = {
@@ -15,29 +14,22 @@ const emailConfig = {
 
 if (hasCredentials) {
   try {
-    // Create default client
     const defaultClient = SibApiV3Sdk.ApiClient.instance;
-
-    // Configure API key authorization
     const apiKeyAuth = defaultClient.authentications['api-key'];
     apiKeyAuth.apiKey = apiKey;
-
-    // Create API instance
     apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-
     console.log('✅ Brevo initialized');
   } catch (error) {
     console.error('❌ Brevo initialization failed:', error.message);
     apiInstance = createMockBrevo();
   }
 } else {
-  console.warn('⚠️ Brevo API key not configured.');
-  console.warn('   Set BREVO_API_KEY in .env');
-  console.warn('   Email features will be disabled.');
+  console.log('ℹ️ Brevo API key not configured.');
+  console.log('   Set BREVO_API_KEY in .env');
+  console.log('   Email will use mock mode.');
   apiInstance = createMockBrevo();
 }
 
-// Mock Brevo service for development
 function createMockBrevo() {
   return {
     sendTransacEmail: async (params) => {

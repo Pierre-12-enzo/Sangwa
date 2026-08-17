@@ -4,7 +4,7 @@ const { sms } = require('../config/africasTalking');
 const { apiInstance, emailConfig } = require('../config/brevo');
 const { smsTemplates, formatPhoneNumber } = require('../utils/smsTemplates');
 const emailTemplates = require('../utils/emailTemplates');
-const sdk = require('sib-api-v3-sdk');
+const SibApiV3Sdk = require('sib-api-v3-sdk'); // ✅ ADD THIS IMPORT
 
 /**
  * Create a new booking
@@ -40,7 +40,6 @@ exports.createBooking = async (req, res) => {
 
       if (result.SMSMessageData?.Recipients?.[0]?.status === 'Success') {
         booking.smsSent = true;
-        await booking.save();
         smsSent = true;
       }
     } catch (error) {
@@ -53,7 +52,7 @@ exports.createBooking = async (req, res) => {
       try {
         const emailTemplate = emailTemplates.confirmation(booking);
 
-        // ✅ Use correct Brevo SDK format
+        // ✅ FIXED: Use SibApiV3Sdk correctly
         const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
         sendSmtpEmail.subject = emailTemplate.subject;
         sendSmtpEmail.htmlContent = emailTemplate.html;
@@ -62,10 +61,21 @@ exports.createBooking = async (req, res) => {
 
         await apiInstance.sendTransacEmail(sendSmtpEmail);
         booking.emailSent = true;
-        await booking.save();
         emailSent = true;
       } catch (error) {
         console.error('❌ Email Error:', error.message);
+      }
+    }
+
+    // Persist smsSent/emailSent flag changes in a single update
+    if (smsSent || emailSent) {
+      try {
+        await Booking.updateOne(
+          { _id: booking._id },
+          { $set: { smsSent: booking.smsSent, emailSent: booking.emailSent } }
+        );
+      } catch (error) {
+        console.error('❌ Failed to persist notification flags:', error.message);
       }
     }
 
@@ -82,6 +92,13 @@ exports.createBooking = async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Booking Error:', error);
+    // Mongoose validation error → 400 (clearer than 500)
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
     res.status(500).json({
       success: false,
       message: error.message || 'Failed to create booking',
@@ -188,7 +205,8 @@ exports.updateBookingStatus = async (req, res) => {
       if (booking.email && !booking.emailSent) {
         try {
           const emailTemplate = emailTemplates.confirmation(booking);
-          const sendSmtpEmail = new sdk.SendSmtpEmail();
+          // ✅ FIXED: Use SibApiV3Sdk correctly
+          const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
           sendSmtpEmail.subject = emailTemplate.subject;
           sendSmtpEmail.htmlContent = emailTemplate.html;
           sendSmtpEmail.sender = emailConfig.sender;
@@ -200,6 +218,18 @@ exports.updateBookingStatus = async (req, res) => {
         }
       }
     }
+
+    // Persist status + flag changes in one update
+    await Booking.updateOne(
+      { _id: booking._id },
+      {
+        $set: {
+          status: booking.status,
+          smsSent: booking.smsSent,
+          emailSent: booking.emailSent,
+        },
+      }
+    );
 
     // If cancelled, send cancellation notification
     if (status === 'cancelled' && oldStatus !== 'cancelled') {
@@ -216,14 +246,18 @@ exports.updateBookingStatus = async (req, res) => {
       }
     }
 
-    await booking.save();
-
     res.json({
       success: true,
       message: `Booking ${status}`,
       data: booking,
     });
   } catch (error) {
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
     res.status(500).json({
       success: false,
       message: error.message,

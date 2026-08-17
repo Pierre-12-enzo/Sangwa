@@ -1,10 +1,12 @@
 // server.js
+// Load environment variables FIRST so that config modules
+// (africasTalking, brevo, database) see the credentials when they
+// are required below.
+const dotenv = require('dotenv');
+dotenv.config();
+
 const app = require('./app');
 const connectDB = require('./config/database');
-const dotenv = require('dotenv');
-
-// Load environment variables
-dotenv.config();
 
 // ✅ Ensure PORT is defined
 const PORT = process.env.PORT || 5000;

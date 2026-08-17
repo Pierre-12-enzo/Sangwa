@@ -11,7 +11,9 @@ import BookingModal from './components/BookingModal';
 import Footer from './components/Footer';
 import AdminDashboard from './components/AdminDashboard';
 import AdminLogin from './components/AdminLogin';
+import LiveChatWidget from './components/LiveChatWidget';
 import AppLoader from './components/AppLoader';
+
 
 function App() {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
@@ -85,8 +87,10 @@ function App() {
         <AdminDashboard onClose={handleAdminClose} />
       ) : (
         <>
+        <LiveChatWidget/>
           <div ref={heroRef}>
             <Hero onBookingClick={() => setIsBookingOpen(true)} />
+
           </div>
           <AboutSection />
           <ServicesGrid />
