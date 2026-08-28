@@ -21,18 +21,7 @@ const bookingSchema = new mongoose.Schema({
   service: {
     type: String,
     required: [true, 'Service selection is required'],
-    enum: [
-      'Maternity',
-      'Internal Medicine',
-      'Pediatrics',
-      'Gynecology',
-      'Laboratory',
-      'Pharmacy',
-      'Dental',
-      'Ophthalmology',
-      'Orthopedics',
-      'Dermatology',
-    ],
+    enum: ['Maternity', 'Internal Medicine', 'Pediatrics', 'Gynecology', 'Laboratory', 'Pharmacy']
   },
   preferredDate: {
     type: Date,
@@ -56,44 +45,41 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     unique: true
   },
+  // ✅ Add these fields for tracking
+  smsSent: {
+    type: Boolean,
+    default: false
+  },
+  emailSent: {
+    type: Boolean,
+    default: false
+  },
   createdAt: {
     type: Date,
     default: Date.now
   }
 });
 
-// ✅ FIXED: Pre-save middleware - Generate booking reference
-// NOTE: With Mongoose 9, async middleware must NOT take a `next` parameter.
-// Return / throw to signal completion; do not call `next()`.
-bookingSchema.pre('save', async function () {
+// ✅ Pre-save middleware - Generate booking reference
+bookingSchema.pre('save', function () {
   // Generate a unique booking reference
-  if (this.bookingReference) return;
-
-  const date = new Date();
-  const year = date.getFullYear().toString().slice(-2);
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-
-  // Try up to 5 times to generate a unique reference (avoid 11000 collisions)
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const random = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
-    const candidate = `SANG${year}${month}${day}${random}`;
-    // eslint-disable-next-line no-await-in-loop
-    const exists = await this.constructor.findOne({ bookingReference: candidate }).lean();
-    if (!exists) {
-      this.bookingReference = candidate;
-      return;
-    }
+  if (!this.bookingReference) {
+    const date = new Date();
+    const year = date.getFullYear().toString().slice(-2);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    this.bookingReference = `SANG${year}${month}${day}${random}`;
   }
 
-  throw new Error('Could not generate a unique booking reference, please retry');
 });
 
-// ✅ FIXED: Post-save middleware (optional - for logging)
+// ✅ Post-save middleware for logging
 bookingSchema.post('save', function (doc) {
   console.log(`✅ Booking saved: ${doc.bookingReference} - ${doc.patientName}`);
 });
 
+// ✅ Pre-validate middleware
 // ✅ FIXED: Pre-validate middleware (optional)
 // NOTE: Mongoose 9 hooks are async-friendly. Omit the `next` param and just throw.
 bookingSchema.pre('validate', function () {

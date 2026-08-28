@@ -14,7 +14,7 @@ exports.createBooking = async (req, res) => {
   try {
     const bookingData = req.body;
 
-    // Validate phone number format
+    // Validate phone number
     if (!bookingData.phoneNumber) {
       return res.status(400).json({
         success: false,
@@ -26,11 +26,20 @@ exports.createBooking = async (req, res) => {
     const booking = new Booking(bookingData);
     await booking.save();
 
+    console.log(`✅ Booking created: ${booking.bookingReference} for ${booking.patientName}`);
+    console.log(`📱 Phone: ${booking.phoneNumber}`);
+    console.log(`📧 Email: ${booking.email || 'Not provided'}`);
+
     // Send SMS Confirmation
     let smsSent = false;
+    let smsError = null;
     try {
+      // ✅ Format phone number correctly for Africa's Talking
       const formattedPhone = formatPhoneNumber(booking.phoneNumber);
+      console.log(`📱 Attempting SMS to: ${formattedPhone}`);
+
       const smsMessage = smsTemplates.confirmation(booking);
+      console.log(`📝 SMS Message: ${smsMessage.substring(0, 50)}...`);
 
       const result = await sms.send({
         to: [formattedPhone],
@@ -38,46 +47,71 @@ exports.createBooking = async (req, res) => {
         from: process.env.AFRICASTALKING_SHORTCODE || 'SANGWA',
       });
 
-      if (result.SMSMessageData?.Recipients?.[0]?.status === 'Success') {
-        booking.smsSent = true;
-        smsSent = true;
+      console.log('📱 SMS Result:', JSON.stringify(result, null, 2));
+
+      // Check if SMS was sent successfully
+      if (result && result.SMSMessageData && result.SMSMessageData.Recipients) {
+        const recipient = result.SMSMessageData.Recipients[0];
+        if (recipient && recipient.status === 'Success') {
+          smsSent = true;
+          console.log(`✅ SMS sent to ${formattedPhone}`);
+        } else {
+          console.log(`⚠️ SMS status: ${recipient?.status || 'Unknown'}`);
+          console.log(`⚠️ SMS response: ${JSON.stringify(recipient)}`);
+          smsError = recipient?.status || 'SMS sending failed';
+        }
+      } else {
+        console.log('⚠️ Unexpected SMS response format');
+        smsError = 'Unexpected SMS response';
       }
     } catch (error) {
       console.error('❌ SMS Error:', error.message);
+      console.error('❌ SMS Error Details:', error.response?.data || error);
+      smsError = error.message;
     }
 
     // Send Email Confirmation (if email provided)
     let emailSent = false;
+    let emailError = null;
     if (booking.email) {
       try {
+        console.log(`📧 Attempting email to: ${booking.email}`);
+        console.log(`🔑 Brevo API Key: ${process.env.BREVO_API_KEY ? 'Present' : 'Missing'}`);
+
         const emailTemplate = emailTemplates.confirmation(booking);
 
-        // ✅ FIXED: Use SibApiV3Sdk correctly
+        // ✅ FIXED: Use correct Brevo SDK
         const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
         sendSmtpEmail.subject = emailTemplate.subject;
         sendSmtpEmail.htmlContent = emailTemplate.html;
         sendSmtpEmail.sender = emailConfig.sender;
-        sendSmtpEmail.to = [{ email: booking.email, name: booking.patientName }];
+        sendSmtpEmail.to = [{
+          email: booking.email,
+          name: booking.patientName
+        }];
+        sendSmtpEmail.replyTo = {
+          email: emailConfig.sender.email,
+          name: emailConfig.sender.name
+        };
 
-        await apiInstance.sendTransacEmail(sendSmtpEmail);
-        booking.emailSent = true;
+        const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
         emailSent = true;
+        console.log(`✅ Email sent to ${booking.email}`);
+        console.log(`📧 Message ID: ${result.messageId}`);
       } catch (error) {
         console.error('❌ Email Error:', error.message);
+        console.error('❌ Email Error Details:', error.response?.data || error);
+        emailError = error.message;
       }
+    } else {
+      console.log('ℹ️ No email provided, skipping email notification');
     }
 
-    // Persist smsSent/emailSent flag changes in a single update
-    if (smsSent || emailSent) {
-      try {
-        await Booking.updateOne(
-          { _id: booking._id },
-          { $set: { smsSent: booking.smsSent, emailSent: booking.emailSent } }
-        );
-      } catch (error) {
-        console.error('❌ Failed to persist notification flags:', error.message);
-      }
-    }
+    // Save SMS/Email status to booking (add fields if they don't exist)
+    // ✅ Add these fields to your Booking schema if not present
+    booking.smsSent = smsSent;
+    booking.emailSent = emailSent;
+    await booking.save();
 
     res.status(201).json({
       success: true,
@@ -87,18 +121,13 @@ exports.createBooking = async (req, res) => {
           ...booking.toJSON(),
           smsSent,
           emailSent,
+          smsError,
+          emailError,
         },
       },
     });
   } catch (error) {
     console.error('❌ Booking Error:', error);
-    // Mongoose validation error → 400 (clearer than 500)
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({
-        success: false,
-        message: error.message,
-      });
-    }
     res.status(500).json({
       success: false,
       message: error.message || 'Failed to create booking',
