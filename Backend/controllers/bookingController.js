@@ -8,7 +8,6 @@ const SibApiV3Sdk = require('sib-api-v3-sdk'); // ✅ ADD THIS IMPORT
 
 /**
  * Create a new booking
- * Handles: SMS confirmation + Email confirmation
  */
 exports.createBooking = async (req, res) => {
   try {
@@ -34,12 +33,19 @@ exports.createBooking = async (req, res) => {
     let smsSent = false;
     let smsError = null;
     try {
-      // ✅ Format phone number correctly for Africa's Talking
+      // ✅ Format phone number correctly (now with + prefix)
       const formattedPhone = formatPhoneNumber(booking.phoneNumber);
       console.log(`📱 Attempting SMS to: ${formattedPhone}`);
 
       const smsMessage = smsTemplates.confirmation(booking);
-      console.log(`📝 SMS Message: ${smsMessage.substring(0, 50)}...`);
+      console.log(`📝 SMS Message: ${smsMessage.substring(0, 60)}...`);
+
+      // ✅ Log what we're sending
+      console.log('📤 SMS Payload:', {
+        to: [formattedPhone],
+        message: smsMessage,
+        from: process.env.AFRICASTALKING_SHORTCODE || 'SANGWA'
+      });
 
       const result = await sms.send({
         to: [formattedPhone],
@@ -47,7 +53,7 @@ exports.createBooking = async (req, res) => {
         from: process.env.AFRICASTALKING_SHORTCODE || 'SANGWA',
       });
 
-      console.log('📱 SMS Result:', JSON.stringify(result, null, 2));
+      console.log('📱 SMS Response:', JSON.stringify(result, null, 2));
 
       // Check if SMS was sent successfully
       if (result && result.SMSMessageData && result.SMSMessageData.Recipients) {
@@ -57,7 +63,6 @@ exports.createBooking = async (req, res) => {
           console.log(`✅ SMS sent to ${formattedPhone}`);
         } else {
           console.log(`⚠️ SMS status: ${recipient?.status || 'Unknown'}`);
-          console.log(`⚠️ SMS response: ${JSON.stringify(recipient)}`);
           smsError = recipient?.status || 'SMS sending failed';
         }
       } else {
@@ -76,11 +81,10 @@ exports.createBooking = async (req, res) => {
     if (booking.email) {
       try {
         console.log(`📧 Attempting email to: ${booking.email}`);
-        console.log(`🔑 Brevo API Key: ${process.env.BREVO_API_KEY ? 'Present' : 'Missing'}`);
 
         const emailTemplate = emailTemplates.confirmation(booking);
 
-        // ✅ FIXED: Use correct Brevo SDK
+        // ✅ Use correct Brevo SDK
         const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
         sendSmtpEmail.subject = emailTemplate.subject;
         sendSmtpEmail.htmlContent = emailTemplate.html;
@@ -100,15 +104,22 @@ exports.createBooking = async (req, res) => {
         console.log(`📧 Message ID: ${result.messageId}`);
       } catch (error) {
         console.error('❌ Email Error:', error.message);
-        console.error('❌ Email Error Details:', error.response?.data || error);
+        console.error('❌ Email Error Details:', error.response?.body || error);
+
+        // ✅ Check if it's an IP whitelist issue
+        if (error.response?.body?.message?.includes('unrecognised IP address')) {
+          console.log('🔑 ACTION REQUIRED: Add your IP to Brevo whitelist');
+          console.log('   Go to: https://app.brevo.com/security/authorised_ips');
+          console.log('   Add IP: 197.157.155.92');
+        }
+
         emailError = error.message;
       }
     } else {
       console.log('ℹ️ No email provided, skipping email notification');
     }
 
-    // Save SMS/Email status to booking (add fields if they don't exist)
-    // ✅ Add these fields to your Booking schema if not present
+    // Save SMS/Email status to booking
     booking.smsSent = smsSent;
     booking.emailSent = emailSent;
     await booking.save();

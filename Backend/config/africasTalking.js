@@ -1,4 +1,4 @@
-// src/config/africasTalking.js
+// backend/config/africasTalking.js
 const africastalking = require('africastalking');
 
 // Get credentials from environment
@@ -16,13 +16,16 @@ let sms;
 
 if (hasCredentials) {
   try {
+    console.log('🔐 Initializing Africa\'s Talking...');
+    console.log(`📱 Username: ${username}`);
+    console.log(`🔑 API Key: ${apiKey.substring(0, 8)}...`);
+
     const AT = africastalking({
       apiKey: apiKey,
       username: username,
     });
     sms = AT.SMS;
-    console.log('✅ Africa\'s Talking initialized');
-    console.log(`📱 Username: ${username}`);
+    console.log('✅ Africa\'s Talking initialized successfully');
   } catch (error) {
     console.error('❌ Africa\'s Talking initialization failed:', error.message);
     sms = createMockSMS();
@@ -35,15 +38,23 @@ if (hasCredentials) {
 }
 
 function createMockSMS() {
+  console.log('📱 [MOCK MODE] SMS will be logged to console');
   return {
     send: async (params) => {
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('📱 [MOCK] SMS would be sent:');
       console.log(`   To: ${params.to}`);
       console.log(`   Message: ${params.message}`);
       console.log(`   From: ${params.from || 'SANGWA'}`);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       return {
         SMSMessageData: {
-          Recipients: [{ status: 'Success', messageId: 'mock_' + Date.now() }]
+          Recipients: [{
+            status: 'Success',
+            messageId: 'mock_' + Date.now(),
+            cost: '0.00',
+            count: 1
+          }]
         }
       };
     }
