@@ -1,386 +1,316 @@
-// src/controllers/bookingController.js
+// backend/controllers/bookingController.js
 const Booking = require('../models/Booking');
-const { sms } = require('../config/africasTalking');
-const { apiInstance, emailConfig } = require('../config/brevo');
-const { smsTemplates, formatPhoneNumber } = require('../utils/smsTemplates');
-const emailTemplates = require('../utils/emailTemplates');
-const SibApiV3Sdk = require('sib-api-v3-sdk'); // ✅ ADD THIS IMPORT
+const Service = require('../models/Service');
+const Doctor = require('../models/Doctor');
+const asyncHandler = require('../utils/asyncHandler');
+const bookingService = require('../services/bookingService');
+const queueService = require('../services/queueService');
+const { log } = require('../middleware/auditLogger');
 
 /**
- * Create a new booking
+ * @route   GET /api/bookings/availability
+ * @desc    Get available sessions/slots for a doctor on a date
+ * @access  Public
  */
-exports.createBooking = async (req, res) => {
-  try {
-    const bookingData = req.body;
-
-    // Validate phone number
-    if (!bookingData.phoneNumber) {
-      return res.status(400).json({
-        success: false,
-        message: 'Phone number is required',
-      });
-    }
-
-    // Create booking
-    const booking = new Booking(bookingData);
-    await booking.save();
-
-    console.log(`✅ Booking created: ${booking.bookingReference} for ${booking.patientName}`);
-    console.log(`📱 Phone: ${booking.phoneNumber}`);
-    console.log(`📧 Email: ${booking.email || 'Not provided'}`);
-
-    // Send SMS Confirmation
-    let smsSent = false;
-    let smsError = null;
-    try {
-      // ✅ Format phone number correctly (now with + prefix)
-      const formattedPhone = formatPhoneNumber(booking.phoneNumber);
-      console.log(`📱 Attempting SMS to: ${formattedPhone}`);
-
-      const smsMessage = smsTemplates.confirmation(booking);
-      console.log(`📝 SMS Message: ${smsMessage.substring(0, 60)}...`);
-
-      // ✅ Log what we're sending
-      console.log('📤 SMS Payload:', {
-        to: [formattedPhone],
-        message: smsMessage,
-        from: process.env.AFRICASTALKING_SHORTCODE || 'SANGWA'
-      });
-
-      const result = await sms.send({
-        to: [formattedPhone],
-        message: smsMessage,
-        from: process.env.AFRICASTALKING_SHORTCODE || 'SANGWA',
-      });
-
-      console.log('📱 SMS Response:', JSON.stringify(result, null, 2));
-
-      // Check if SMS was sent successfully
-      if (result && result.SMSMessageData && result.SMSMessageData.Recipients) {
-        const recipient = result.SMSMessageData.Recipients[0];
-        if (recipient && recipient.status === 'Success') {
-          smsSent = true;
-          console.log(`✅ SMS sent to ${formattedPhone}`);
-        } else {
-          console.log(`⚠️ SMS status: ${recipient?.status || 'Unknown'}`);
-          smsError = recipient?.status || 'SMS sending failed';
-        }
-      } else {
-        console.log('⚠️ Unexpected SMS response format');
-        smsError = 'Unexpected SMS response';
-      }
-    } catch (error) {
-      console.error('❌ SMS Error:', error.message);
-      console.error('❌ SMS Error Details:', error.response?.data || error);
-      smsError = error.message;
-    }
-
-    // Send Email Confirmation (if email provided)
-    let emailSent = false;
-    let emailError = null;
-    if (booking.email) {
-      try {
-        console.log(`📧 Attempting email to: ${booking.email}`);
-
-        const emailTemplate = emailTemplates.confirmation(booking);
-
-        // ✅ Use correct Brevo SDK
-        const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-        sendSmtpEmail.subject = emailTemplate.subject;
-        sendSmtpEmail.htmlContent = emailTemplate.html;
-        sendSmtpEmail.sender = emailConfig.sender;
-        sendSmtpEmail.to = [{
-          email: booking.email,
-          name: booking.patientName
-        }];
-        sendSmtpEmail.replyTo = {
-          email: emailConfig.sender.email,
-          name: emailConfig.sender.name
-        };
-
-        const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
-        emailSent = true;
-        console.log(`✅ Email sent to ${booking.email}`);
-        console.log(`📧 Message ID: ${result.messageId}`);
-      } catch (error) {
-        console.error('❌ Email Error:', error.message);
-        console.error('❌ Email Error Details:', error.response?.body || error);
-
-        // ✅ Check if it's an IP whitelist issue
-        if (error.response?.body?.message?.includes('unrecognised IP address')) {
-          console.log('🔑 ACTION REQUIRED: Add your IP to Brevo whitelist');
-          console.log('   Go to: https://app.brevo.com/security/authorised_ips');
-          console.log('   Add IP: 197.157.155.92');
-        }
-
-        emailError = error.message;
-      }
-    } else {
-      console.log('ℹ️ No email provided, skipping email notification');
-    }
-
-    // Save SMS/Email status to booking
-    booking.smsSent = smsSent;
-    booking.emailSent = emailSent;
-    await booking.save();
-
-    res.status(201).json({
-      success: true,
-      message: 'Appointment booked successfully!',
-      data: {
-        booking: {
-          ...booking.toJSON(),
-          smsSent,
-          emailSent,
-          smsError,
-          emailError,
-        },
-      },
-    });
-  } catch (error) {
-    console.error('❌ Booking Error:', error);
-    res.status(500).json({
+exports.availability = asyncHandler(async (req, res) => {
+  const { doctorId, date, serviceId } = req.query;
+  if (!doctorId || !date) {
+    return res.status(400).json({
       success: false,
-      message: error.message || 'Failed to create booking',
+      message: 'doctorId and date are required'
     });
   }
-};
 
-/**
- * Get all bookings (Admin only)
- */
-exports.getAllBookings = async (req, res) => {
-  try {
-    const { status, startDate, endDate, service } = req.query;
-
-    // Build filter
-    const filter = {};
-    if (status) filter.status = status;
-    if (service) filter.service = service;
-    if (startDate || endDate) {
-      filter.preferredDate = {};
-      if (startDate) filter.preferredDate.$gte = new Date(startDate);
-      if (endDate) filter.preferredDate.$lte = new Date(endDate);
-    }
-
-    const bookings = await Booking.find(filter)
-      .sort({ preferredDate: 1, preferredTime: 1 })
-      .lean();
-
-    res.json({
-      success: true,
-      count: bookings.length,
-      data: bookings,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  const doctor = await Doctor.findById(doctorId);
+  if (!doctor) {
+    return res.status(404).json({ success: false, message: 'Doctor not found' });
   }
-};
 
-/**
- * Get single booking by ID
- */
-exports.getBookingById = async (req, res) => {
-  try {
-    const booking = await Booking.findById(req.params.id);
-    if (!booking) {
-      return res.status(404).json({
-        success: false,
-        message: 'Booking not found',
-      });
-    }
-    res.json({
-      success: true,
-      data: booking,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  const dateObj = new Date(date);
+  const availability = doctor.getAvailabilityForDate(dateObj);
+  if (!availability.available) {
+    return res.json({ success: true, available: false, reason: availability.reason });
   }
-};
 
-/**
- * Update booking status
- */
-exports.updateBookingStatus = async (req, res) => {
-  try {
-    const { status } = req.body;
-    const booking = await Booking.findById(req.params.id);
+  const service = serviceId ? await Service.findById(serviceId) : null;
+  const bookingMode = service?.bookingMode || 'session';
 
-    if (!booking) {
-      return res.status(404).json({
-        success: false,
-        message: 'Booking not found',
-      });
-    }
-
-    // Store old status for comparison
-    const oldStatus = booking.status;
-    booking.status = status;
-
-    // If confirming, send SMS and Email
-    if (status === 'confirmed' && oldStatus !== 'confirmed') {
-      // Send confirmation if not already sent
-      if (!booking.smsSent) {
-        try {
-          const formattedPhone = formatPhoneNumber(booking.phoneNumber);
-          const smsMessage = smsTemplates.confirmation(booking);
-          await sms.send({
-            to: [formattedPhone],
-            message: smsMessage,
-            from: process.env.AFRICASTALKING_SHORTCODE || 'SANGWA',
-          });
-          booking.smsSent = true;
-        } catch (error) {
-          console.error('❌ SMS Error:', error.message);
-        }
-      }
-
-      // Send email if not already sent and email exists
-      if (booking.email && !booking.emailSent) {
-        try {
-          const emailTemplate = emailTemplates.confirmation(booking);
-          // ✅ FIXED: Use SibApiV3Sdk correctly
-          const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-          sendSmtpEmail.subject = emailTemplate.subject;
-          sendSmtpEmail.htmlContent = emailTemplate.html;
-          sendSmtpEmail.sender = emailConfig.sender;
-          sendSmtpEmail.to = [{ email: booking.email, name: booking.patientName }];
-          await apiInstance.sendTransacEmail(sendSmtpEmail);
-          booking.emailSent = true;
-        } catch (error) {
-          console.error('❌ Email Error:', error.message);
-        }
-      }
-    }
-
-    // Persist status + flag changes in one update
-    await Booking.updateOne(
-      { _id: booking._id },
-      {
-        $set: {
-          status: booking.status,
-          smsSent: booking.smsSent,
-          emailSent: booking.emailSent,
-        },
-      }
-    );
-
-    // If cancelled, send cancellation notification
-    if (status === 'cancelled' && oldStatus !== 'cancelled') {
-      try {
-        const formattedPhone = formatPhoneNumber(booking.phoneNumber);
-        const smsMessage = smsTemplates.cancellation(booking);
-        await sms.send({
-          to: [formattedPhone],
-          message: smsMessage,
-          from: process.env.AFRICASTALKING_SHORTCODE || 'SANGWA',
+  if (bookingMode === 'session') {
+    // Count bookings per session
+    const sessions = await Promise.all(
+      availability.sessions.map(async (s) => {
+        const count = await Booking.countDocuments({
+          doctor: doctorId,
+          preferredDate: dateObj,
+          session: s.name,
+          status: { $in: ['pending_payment', 'confirmed', 'checked_in', 'in_consultation'] }
         });
-      } catch (error) {
-        console.error('❌ SMS Error:', error.message);
-      }
-    }
-
-    res.json({
+        return {
+          name: s.name,
+          startTime: s.startTime,
+          endTime: s.endTime,
+          maxPatients: s.maxPatients,
+          booked: count,
+          remaining: Math.max(0, s.maxPatients - count),
+          isFull: count >= s.maxPatients
+        };
+      })
+    );
+    return res.json({
       success: true,
-      message: `Booking ${status}`,
-      data: booking,
-    });
-  } catch (error) {
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({
-        success: false,
-        message: error.message,
-      });
-    }
-    res.status(500).json({
-      success: false,
-      message: error.message,
+      available: true,
+      bookingMode: 'session',
+      sessions
     });
   }
-};
+
+  // Fixed slot: build slot list
+  const slots = [];
+  const { startTime, endTime } = availability.sessions[0] || {};
+  const slotDuration = service?.slotConfig?.slotDuration || 30;
+
+  if (startTime && endTime) {
+    const booked = await Booking.find({
+      doctor: doctorId,
+      preferredDate: dateObj,
+      bookingType: 'fixed_slot',
+      status: { $in: ['pending_payment', 'confirmed', 'checked_in', 'in_consultation'] }
+    }).select('slotTime');
+
+    const bookedSet = new Set(booked.map((b) => b.slotTime));
+    let cursor = parseTime(startTime);
+    const end = parseTime(endTime);
+
+    while (cursor < end) {
+      const timeStr = formatTime(cursor);
+      slots.push({ time: timeStr, available: !bookedSet.has(timeStr) });
+      cursor += slotDuration;
+    }
+  }
+
+  res.json({
+    success: true,
+    available: true,
+    bookingMode: 'fixed_slot',
+    slots
+  });
+});
 
 /**
- * Delete booking
+ * @route   POST /api/bookings
+ * @desc    Initiate booking (pending_payment)
+ * @access  Public
+ * @header  Idempotency-Key (optional but recommended)
  */
-exports.deleteBooking = async (req, res) => {
-  try {
-    const booking = await Booking.findById(req.params.id);
-    if (!booking) {
-      return res.status(404).json({
-        success: false,
-        message: 'Booking not found',
-      });
-    }
-    await booking.deleteOne();
-    res.json({
-      success: true,
-      message: 'Booking deleted successfully',
-    });
-  } catch (error) {
-    res.status(500).json({
+exports.initiate = asyncHandler(async (req, res) => {
+  const {
+    patientName, phoneNumber, email,
+    serviceId, doctorId,
+    preferredDate, session, slotTime,
+    additionalNotes
+  } = req.body;
+
+  if (!phoneNumber || !serviceId || !doctorId || !preferredDate) {
+    return res.status(400).json({
       success: false,
-      message: error.message,
+      message: 'Missing required fields'
     });
   }
-};
 
-/**
- * Get dashboard statistics
- */
-exports.getStats = async (req, res) => {
-  try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  // Split patient name (simple heuristic)
+  const [firstName, ...rest] = (patientName || '').trim().split(' ');
+  const lastName = rest.join(' ');
 
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+  const result = await bookingService.initiateBooking({
+    patientData: {
+      phoneNumber,
+      firstName: firstName || 'Unknown',
+      lastName,
+      email,
+      registeredVia: 'online'
+    },
+    serviceId,
+    doctorId,
+    preferredDate,
+    session,
+    slotTime,
+    additionalNotes,
+    idempotencyKey: req.headers['idempotency-key']
+  });
 
-    const [
-      totalBookings,
-      todayBookings,
-      pendingBookings,
-      confirmedBookings,
-      completedBookings,
-      cancelledBookings,
-    ] = await Promise.all([
-      Booking.countDocuments(),
-      Booking.countDocuments({
-        preferredDate: { $gte: today, $lt: tomorrow },
-      }),
-      Booking.countDocuments({ status: 'pending' }),
-      Booking.countDocuments({ status: 'confirmed' }),
-      Booking.countDocuments({ status: 'completed' }),
-      Booking.countDocuments({ status: 'cancelled' }),
-    ]);
+  await log({
+    user: null,
+    action: 'booking.create',
+    resourceType: 'Booking',
+    resourceId: result.booking._id,
+    req,
+    metadata: { reference: result.booking.bookingReference }
+  });
 
-    // Get bookings by service
-    const serviceStats = await Booking.aggregate([
-      { $group: { _id: '$service', count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-    ]);
-
-    res.json({
-      success: true,
-      data: {
-        total: totalBookings,
-        today: todayBookings,
-        pending: pendingBookings,
-        confirmed: confirmedBookings,
-        completed: completedBookings,
-        cancelled: cancelledBookings,
-        byService: serviceStats,
+  // TODO: integrate Paypack — return paymentUrl
+  res.status(201).json({
+    success: true,
+    message: 'Booking initiated. Complete payment to confirm.',
+    data: {
+      booking: {
+        _id: result.booking._id,
+        bookingReference: result.booking.bookingReference,
+        status: result.booking.status,
+        tokenNumber: result.booking.tokenNumber,
+        session: result.booking.session,
+        slotTime: result.booking.slotTime,
+        amount: result.booking.amount,
+        currency: result.booking.currency,
+        preferredDate: result.booking.preferredDate,
+        serviceName: result.booking.serviceName,
+        doctorName: result.booking.doctorName
       },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+      patient: {
+        _id: result.patient._id,
+        patientNumber: result.patient.patientNumber,
+        fullName: result.patient.fullName,
+        isNew: result.isNewPatient
+      },
+      // paymentUrl: '...' // filled after Paypack integration
+    }
+  });
+});
+
+/**
+ * @route   POST /api/bookings/:id/confirm
+ * @desc    Confirm a booking after payment (or by reception)
+ * @access  Private (reception, admin) OR webhook
+ */
+exports.confirm = asyncHandler(async (req, res) => {
+  const { method = 'cash', reference = '' } = req.body;
+
+  const booking = await bookingService.confirmBooking(req.params.id, {
+    method,
+    reference
+  });
+
+  await log({
+    user: req.user || null,
+    action: 'payment.confirm',
+    resourceType: 'Booking',
+    resourceId: booking._id,
+    req,
+    metadata: { method, reference }
+  });
+
+  // TODO: send SMS + Email confirmation
+
+  res.json({ success: true, data: booking });
+});
+
+/**
+ * @route   POST /api/bookings/:id/cancel
+ * @desc    Cancel a booking
+ * @access  Private
+ */
+exports.cancel = asyncHandler(async (req, res) => {
+  const { reason } = req.body;
+
+  const booking = await bookingService.cancelBooking(
+    req.params.id,
+    reason || 'Cancelled by staff',
+    req.user?._id
+  );
+
+  await log({
+    user: req.user,
+    action: 'booking.cancel',
+    resourceType: 'Booking',
+    resourceId: booking._id,
+    req,
+    metadata: { reason }
+  });
+
+  res.json({ success: true, data: booking });
+});
+
+/**
+ * @route   GET /api/bookings
+ * @desc    List bookings with filters
+ * @access  Private
+ */
+exports.list = asyncHandler(async (req, res) => {
+  const { status, doctorId, date, serviceId, patientId } = req.query;
+
+  const filter = {};
+  if (status) filter.status = status;
+  if (doctorId) filter.doctor = doctorId;
+  if (serviceId) filter.service = serviceId;
+  if (patientId) filter.patient = patientId;
+  if (date) {
+    const d = new Date(date);
+    const start = new Date(d); start.setHours(0, 0, 0, 0);
+    const end = new Date(d); end.setHours(23, 59, 59, 999);
+    filter.preferredDate = { $gte: start, $lte: end };
   }
-};
+
+  const bookings = await Booking.find(filter)
+    .populate('patient', 'patientNumber fullName phoneNumber')
+    .populate('doctor', 'fullName title')
+    .populate('service', 'name icon')
+    .sort({ preferredDate: 1, tokenNumber: 1 })
+    .limit(200);
+
+  res.json({ success: true, count: bookings.length, data: bookings });
+});
+
+/**
+ * @route   GET /api/bookings/:id
+ * @desc    Get booking details
+ * @access  Private
+ */
+exports.getOne = asyncHandler(async (req, res) => {
+  const booking = await Booking.findById(req.params.id)
+    .populate('patient')
+    .populate('doctor', 'fullName title photo')
+    .populate('service', 'name icon price');
+
+  if (!booking) {
+    return res.status(404).json({ success: false, message: 'Booking not found' });
+  }
+
+  res.json({ success: true, data: booking });
+});
+
+/**
+ * @route   POST /api/bookings/:id/check-in
+ * @desc    Mark patient as arrived (receptionist)
+ * @access  Private (receptionist, admin)
+ */
+exports.checkIn = asyncHandler(async (req, res) => {
+  const booking = await queueService.checkIn({
+    bookingId: req.params.id,
+    receptionistUserId: req.user._id
+  });
+
+  if (!booking) {
+    return res.status(404).json({ success: false, message: 'Booking not found' });
+  }
+
+  await log({
+    user: req.user,
+    action: 'booking.update',
+    resourceType: 'Booking',
+    resourceId: booking._id,
+    req,
+    metadata: { action: 'check_in' }
+  });
+
+  res.json({ success: true, data: booking });
+});
+
+// === Helpers ===
+function parseTime(str) {
+  const [h, m] = str.split(':').map(Number);
+  return h * 60 + m;
+}
+function formatTime(minutes) {
+  const h = Math.floor(minutes / 60).toString().padStart(2, '0');
+  const m = (minutes % 60).toString().padStart(2, '0');
+  return `${h}:${m}`;
+}

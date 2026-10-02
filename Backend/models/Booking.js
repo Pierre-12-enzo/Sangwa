@@ -2,106 +2,139 @@
 const mongoose = require('mongoose');
 
 const bookingSchema = new mongoose.Schema({
-  patientName: {
-    type: String,
-    required: [true, 'Patient name is required'],
-    trim: true
+  // === Who ===
+  patient: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Patient',
+    required: true,
+    index: true
   },
-  phoneNumber: {
+  patientName: String,
+  patientNumber: String,
+  phoneNumber: String,
+
+  // === What ===
+  service: { type: mongoose.Schema.Types.ObjectId, ref: 'Service', required: true },
+  serviceName: String,
+  doctor: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor', required: true },
+  doctorName: String,
+
+  // === When ===
+  preferredDate: { type: Date, required: true, index: true },
+  bookingType: {
     type: String,
-    required: [true, 'Phone number is required'],
-    trim: true
+    enum: ['session', 'fixed_slot'],
+    required: true
   },
-  email: {
+  session: {
     type: String,
-    trim: true,
-    lowercase: true,
-    match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email address']
+    enum: ['morning', 'afternoon', 'evening', null],
+    default: null
   },
-  service: {
+  slotTime: { type: String, default: null }, // '14:00' for fixed_slot
+
+  // === Queue (session-based) ===
+  tokenNumber: Number,
+  queuePosition: Number,
+  estimatedTime: Date,
+  calledAt: Date,
+  arrivedAt: Date,
+  seenAt: Date,
+
+  // === Payment ===
+  amount: Number,
+  currency: { type: String, default: 'RWF' },
+  paymentStatus: {
     type: String,
-    required: [true, 'Service selection is required'],
-    enum: ['Maternity', 'Internal Medicine', 'Pediatrics', 'Gynecology', 'Laboratory', 'Pharmacy']
-  },
-  preferredDate: {
-    type: Date,
-    required: [true, 'Preferred date is required']
-  },
-  preferredTime: {
-    type: String,
-    required: [true, 'Preferred time is required']
-  },
-  additionalNotes: {
-    type: String,
-    trim: true,
-    maxlength: [500, 'Notes cannot exceed 500 characters']
-  },
-  status: {
-    type: String,
-    enum: ['pending', 'confirmed', 'cancelled', 'completed'],
+    enum: ['pending', 'paid', 'failed', 'refunded', 'covered_by_insurance'],
     default: 'pending'
   },
-  bookingReference: {
+  paymentMethod: {
     type: String,
-    unique: true
+    enum: ['mtn_momo', 'airtel_money', 'card', 'cash', 'insurance'],
+    default: null
   },
-  // ✅ Add these fields for tracking
-  smsSent: {
-    type: Boolean,
-    default: false
+  paymentReference: String,
+  paidAt: Date,
+  insuranceCoverage: {
+    insurance: { type: mongoose.Schema.Types.ObjectId, ref: 'Insurance' },
+    coveredAmount: Number,
+    patientPays: Number
   },
-  emailSent: {
-    type: Boolean,
-    default: false
+
+  // === Status ===
+  status: {
+    type: String,
+    enum: [
+      'pending_payment',
+      'confirmed',
+      'checked_in',
+      'in_consultation',
+      'completed',
+      'cancelled',
+      'no_show',
+      'expired'
+    ],
+    default: 'pending_payment'
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
+
+  bookingReference: { type: String, unique: true, index: true },
+
+  // === Notifications ===
+  smsSent: { type: Boolean, default: false },
+  emailSent: { type: Boolean, default: false },
+  reminderSent: { type: Boolean, default: false },
+  calledSmsSent: { type: Boolean, default: false },
+
+  // === Clinical (Phase 3) ===
+  medicalRecord: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'MedicalRecord'
+  },
+
+  additionalNotes: String,
+  cancellationReason: String,
+  cancelledBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+
+  // === Idempotency ===
+  idempotencyKey: { type: String, index: true, sparse: true },
+
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+  confirmedAt: Date,
+  cancelledAt: Date
 });
 
-// ✅ Pre-save middleware - Generate booking reference
-bookingSchema.pre('save', function () {
-  // Generate a unique booking reference
-  if (!this.bookingReference) {
-    const date = new Date();
-    const year = date.getFullYear().toString().slice(-2);
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    this.bookingReference = `SANG${year}${month}${day}${random}`;
-  }
-
-});
-
-// ✅ Post-save middleware for logging
-bookingSchema.post('save', function (doc) {
-  console.log(`✅ Booking saved: ${doc.bookingReference} - ${doc.patientName}`);
-});
-
-// ✅ Pre-validate middleware
-// ✅ FIXED: Pre-validate middleware (optional)
-// NOTE: Mongoose 9 hooks are async-friendly. Omit the `next` param and just throw.
-bookingSchema.pre('validate', function () {
-  // Ensure preferredDate is not in the past
-  if (this.preferredDate) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (this.preferredDate < today) {
-      throw new Error('Preferred date cannot be in the past');
+// === Prevent double-booking (only for fixed_slot) ===
+bookingSchema.index(
+  { doctor: 1, preferredDate: 1, slotTime: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      bookingType: 'fixed_slot',
+      status: { $in: ['pending_payment', 'confirmed', 'checked_in', 'in_consultation'] }
     }
   }
+);
+
+// === Queue ordering (session-based) ===
+bookingSchema.index({ doctor: 1, preferredDate: 1, session: 1, tokenNumber: 1 });
+
+// === Patient history ===
+bookingSchema.index({ patient: 1, preferredDate: -1 });
+
+// === Auto-generate booking reference ===
+bookingSchema.pre('save', function (next) {
+  if (!this.bookingReference) {
+    const date = new Date();
+    const y = date.getFullYear().toString().slice(-2);
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const rand = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    this.bookingReference = `SANG${y}${m}${d}${rand}`;
+  }
+  this.updatedAt = new Date();
+  next();
 });
-
-// Instance method to update status
-bookingSchema.methods.updateStatus = function (newStatus) {
-  this.status = newStatus;
-  return this.save();
-};
-
-// Static method to find by reference
-bookingSchema.statics.findByReference = function (reference) {
-  return this.findOne({ bookingReference: reference });
-};
 
 module.exports = mongoose.model('Booking', bookingSchema);
