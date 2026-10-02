@@ -1,8 +1,28 @@
 // frontend/src/api/client.js
 import axios from 'axios';
 
-// Base URL for API
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+// Environment detection - FIXED ORDER
+const getApiBaseUrl = () => {
+  // 1. Check if we're in development mode FIRST
+  const isDevelopment = window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1';
+
+  if (isDevelopment) {
+    return 'http://localhost:5000/api';
+  }
+
+  // 2. For production, use environment variable if available
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+
+  // 3. Fallback (should never hit in production if env vars are set)
+  console.warn('⚠️ No VITE_API_URL found, using default fallback');
+  return 'https://card-agent-256t.onrender.com/api';
+};
+
+const API_URL = getApiBaseUrl();
 
 // Create axios instance
 const apiClient = axios.create({
