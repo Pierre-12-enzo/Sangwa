@@ -124,7 +124,7 @@ bookingSchema.index({ doctor: 1, preferredDate: 1, session: 1, tokenNumber: 1 })
 bookingSchema.index({ patient: 1, preferredDate: -1 });
 
 // === Auto-generate booking reference ===
-bookingSchema.pre('save', function (next) {
+bookingSchema.pre('save', function () {
   if (!this.bookingReference) {
     const date = new Date();
     const y = date.getFullYear().toString().slice(-2);
@@ -134,7 +134,7 @@ bookingSchema.pre('save', function (next) {
     this.bookingReference = `SANG${y}${m}${d}${rand}`;
   }
   this.updatedAt = new Date();
-  next();
+  
 });
 
 module.exports = mongoose.model('Booking', bookingSchema);

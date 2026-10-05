@@ -111,7 +111,7 @@ const patientSchema = new mongoose.Schema({
 });
 
 // === Auto-generate patient number + full name + completeness ===
-patientSchema.pre('save', async function(next) {
+patientSchema.pre('validate', async function() {
   // Auto-generate patient number
   if (!this.patientNumber) {
     const count = await mongoose.model('Patient').countDocuments();
@@ -133,8 +133,7 @@ patientSchema.pre('save', async function(next) {
   
   this.profileStatus = this.profileCompleteness >= 80 ? 'complete' : 'partial';
   this.updatedAt = new Date();
-  
-  next();
+
 });
 
 // === Text search index ===

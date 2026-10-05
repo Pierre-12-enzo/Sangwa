@@ -13,17 +13,29 @@ const Booking = require('../models/Booking');
 async function seed() {
   await mongoose.connect(process.env.MONGODB_URI);
   console.log('🌱 Seeding demo data...\n');
-  
+
+
+  // === 0. Wipe existing demo data ===
+  console.log('🧹 Clearing existing collections...');
+  await Promise.all([
+    Insurance.deleteMany({}),
+    Service.deleteMany({}),
+    Doctor.deleteMany({}),
+    User.deleteMany({}),
+    Patient.deleteMany({}),
+    Booking.deleteMany({})
+  ]);
+
   // === 1. Insurance ===
   console.log('📋 Seeding insurance providers...');
-  const insurances = await Insurance.insertMany([
+  const insurances = await Insurance.create(
     { name: 'Rwanda Social Security Board', shortName: 'RSSB', coveragePercentage: 85, displayOnWebsite: true },
     { name: 'Mutuelle de Santé', shortName: 'Mutuelles', coveragePercentage: 90, displayOnWebsite: true },
     { name: 'Radiant Insurance', shortName: 'Radiant', coveragePercentage: 80, displayOnWebsite: true },
     { name: 'Britam Rwanda', shortName: 'Britam', coveragePercentage: 80, displayOnWebsite: true },
     { name: 'Prime Insurance', shortName: 'Prime', coveragePercentage: 80, displayOnWebsite: true }
-  ]);
-  
+  );
+
   // === 2. Services ===
   console.log('🏥 Seeding services...');
   const services = await Service.insertMany([
@@ -99,7 +111,7 @@ async function seed() {
       slotConfig: { slotDuration: 10, maxParallel: 3 }
     }
   ]);
-  
+
   // === 3. Doctors ===
   console.log('👨‍⚕️ Seeding doctors...');
   const doctors = await Doctor.insertMany([
@@ -113,17 +125,23 @@ async function seed() {
       languages: ['Kinyarwanda', 'English', 'French'],
       services: [services[0]._id, services[3]._id], // Maternity + Gynecology
       weeklySchedule: [
-        { day: 'Monday', isWorking: true, sessions: [
-          { name: 'morning', startTime: '08:00', endTime: '12:00', maxPatients: 10 },
-          { name: 'afternoon', startTime: '14:00', endTime: '17:00', maxPatients: 8 }
-        ]},
-        { day: 'Wednesday', isWorking: true, sessions: [
-          { name: 'morning', startTime: '08:00', endTime: '12:00', maxPatients: 10 },
-          { name: 'afternoon', startTime: '14:00', endTime: '17:00', maxPatients: 8 }
-        ]},
-        { day: 'Friday', isWorking: true, sessions: [
-          { name: 'morning', startTime: '08:00', endTime: '12:00', maxPatients: 10 }
-        ]}
+        {
+          day: 'Monday', isWorking: true, sessions: [
+            { name: 'morning', startTime: '08:00', endTime: '12:00', maxPatients: 10 },
+            { name: 'afternoon', startTime: '14:00', endTime: '17:00', maxPatients: 8 }
+          ]
+        },
+        {
+          day: 'Wednesday', isWorking: true, sessions: [
+            { name: 'morning', startTime: '08:00', endTime: '12:00', maxPatients: 10 },
+            { name: 'afternoon', startTime: '14:00', endTime: '17:00', maxPatients: 8 }
+          ]
+        },
+        {
+          day: 'Friday', isWorking: true, sessions: [
+            { name: 'morning', startTime: '08:00', endTime: '12:00', maxPatients: 10 }
+          ]
+        }
       ]
     },
     {
@@ -136,16 +154,22 @@ async function seed() {
       languages: ['Kinyarwanda', 'English'],
       services: [services[1]._id],
       weeklySchedule: [
-        { day: 'Tuesday', isWorking: true, sessions: [
-          { name: 'morning', startTime: '08:00', endTime: '12:00', maxPatients: 12 },
-          { name: 'afternoon', startTime: '14:00', endTime: '17:00', maxPatients: 10 }
-        ]},
-        { day: 'Thursday', isWorking: true, sessions: [
-          { name: 'morning', startTime: '08:00', endTime: '12:00', maxPatients: 12 }
-        ]},
-        { day: 'Saturday', isWorking: true, sessions: [
-          { name: 'morning', startTime: '09:00', endTime: '12:00', maxPatients: 8 }
-        ]}
+        {
+          day: 'Tuesday', isWorking: true, sessions: [
+            { name: 'morning', startTime: '08:00', endTime: '12:00', maxPatients: 12 },
+            { name: 'afternoon', startTime: '14:00', endTime: '17:00', maxPatients: 10 }
+          ]
+        },
+        {
+          day: 'Thursday', isWorking: true, sessions: [
+            { name: 'morning', startTime: '08:00', endTime: '12:00', maxPatients: 12 }
+          ]
+        },
+        {
+          day: 'Saturday', isWorking: true, sessions: [
+            { name: 'morning', startTime: '09:00', endTime: '12:00', maxPatients: 8 }
+          ]
+        }
       ]
     },
     {
@@ -158,25 +182,31 @@ async function seed() {
       languages: ['Kinyarwanda', 'English', 'French'],
       services: [services[2]._id],
       weeklySchedule: [
-        { day: 'Monday', isWorking: true, sessions: [
-          { name: 'morning', startTime: '08:00', endTime: '12:00', maxPatients: 8 },
-          { name: 'afternoon', startTime: '14:00', endTime: '17:00', maxPatients: 8 }
-        ]},
-        { day: 'Tuesday', isWorking: true, sessions: [
-          { name: 'morning', startTime: '08:00', endTime: '12:00', maxPatients: 8 }
-        ]},
-        { day: 'Thursday', isWorking: true, sessions: [
-          { name: 'morning', startTime: '08:00', endTime: '12:00', maxPatients: 8 },
-          { name: 'afternoon', startTime: '14:00', endTime: '17:00', maxPatients: 8 }
-        ]}
+        {
+          day: 'Monday', isWorking: true, sessions: [
+            { name: 'morning', startTime: '08:00', endTime: '12:00', maxPatients: 8 },
+            { name: 'afternoon', startTime: '14:00', endTime: '17:00', maxPatients: 8 }
+          ]
+        },
+        {
+          day: 'Tuesday', isWorking: true, sessions: [
+            { name: 'morning', startTime: '08:00', endTime: '12:00', maxPatients: 8 }
+          ]
+        },
+        {
+          day: 'Thursday', isWorking: true, sessions: [
+            { name: 'morning', startTime: '08:00', endTime: '12:00', maxPatients: 8 },
+            { name: 'afternoon', startTime: '14:00', endTime: '17:00', maxPatients: 8 }
+          ]
+        }
       ]
     }
   ]);
-  
+
   // === 4. Staff Users ===
   console.log('👤 Seeding staff users...');
   const password = await bcrypt.hash('sangwa123', 12);
-  
+
   const users = await User.insertMany([
     {
       email: 'admin@sangwa.rw',
@@ -217,12 +247,12 @@ async function seed() {
       doctorProfile: doctors[2]._id
     }
   ]);
-  
+
   // Link doctors to user accounts
   await Doctor.findByIdAndUpdate(doctors[0]._id, { userAccount: users[2]._id });
   await Doctor.findByIdAndUpdate(doctors[1]._id, { userAccount: users[3]._id });
   await Doctor.findByIdAndUpdate(doctors[2]._id, { userAccount: users[4]._id });
-  
+
   // === 5. Patients ===
   console.log('🧑‍🤝‍🧑 Seeding patients...');
   const patientData = [
@@ -237,8 +267,10 @@ async function seed() {
     { firstName: 'Diane', lastName: 'Ingabire', gender: 'Female', phoneNumber: '+250788111009', dateOfBirth: '1993-04-25' },
     { firstName: 'Olivier', lastName: 'Mugabo', gender: 'Male', phoneNumber: '+250788111010', dateOfBirth: '1991-06-14' }
   ];
-  
+
   const patients = [];
+  let counter = 1;
+
   for (const p of patientData) {
     const patient = new Patient({
       ...p,
@@ -251,14 +283,14 @@ async function seed() {
     await patient.save();
     patients.push(patient);
   }
-  
+
   // === 6. Sample Bookings ===
   console.log('📅 Seeding sample bookings...');
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
   tomorrow.setHours(0, 0, 0, 0);
-  
+
   const sampleBookings = [
     // Confirmed booking for tomorrow
     {
@@ -301,12 +333,12 @@ async function seed() {
       smsSent: true
     }
   ];
-  
+
   for (const b of sampleBookings) {
     const booking = new Booking(b);
     await booking.save();
   }
-  
+
   console.log('\n✅ Demo data seeded successfully!\n');
   console.log('📊 Summary:');
   console.log(`   Insurance: ${insurances.length}`);
@@ -322,7 +354,7 @@ async function seed() {
   console.log('   Doctor:     dr.jean@sangwa.rw');
   console.log('   Doctor:     dr.grace@sangwa.rw');
   console.log('');
-  
+
   await mongoose.disconnect();
 }
 

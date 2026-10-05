@@ -56,7 +56,6 @@ insuranceSchema.pre('save', function(next) {
   if (this.name && !this.slug) {
     this.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   }
-  next();
 });
 
 module.exports = mongoose.model('Insurance', insuranceSchema);

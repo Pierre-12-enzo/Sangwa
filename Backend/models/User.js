@@ -92,19 +92,17 @@ const userSchema = new mongoose.Schema({
 });
 
 // === Hash password ===
-userSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) return next();
+userSchema.pre('save', async function () {
+    if (!this.isModified('password')) return;
     this.password = await bcrypt.hash(this.password, 12);
-    next();
 });
 
 // === Apply default permissions per role (only on new users) ===
-userSchema.pre('save', function (next) {
+userSchema.pre('save', function () {
     if (this.isNew && (!this.permissions || Object.keys(this.permissions).length === 0)) {
         this.permissions = getDefaultPermissions(this.role);
     }
     this.updatedAt = new Date();
-    next();
 });
 
 // === Compare password ===
