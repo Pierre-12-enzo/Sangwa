@@ -6,6 +6,8 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 
+
+const eventsRoutes = require('./routes/events');
 const authRoutes = require('./routes/auth');
 const patientRoutes = require('./routes/patients');
 const bookingRoutes = require('./routes/bookings');
@@ -51,6 +53,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+
+app.use('/api/events', eventsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/bookings', bookingRoutes);

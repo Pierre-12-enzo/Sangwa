@@ -916,6 +916,51 @@ const fr = {
   'virtualTour.areas.pharmacy': 'Pharmacie',
   'virtualTour.locationHint': 'Ngoma, Huye — Près du CHUB',
   'virtualTour.areaLabel': 'Bientôt disponible',
+
+
+
+  // Dashboard
+  'dash.overview': 'Overview',
+  'dash.liveQueue': 'Live Queue',
+  'dash.mySchedule': 'My Schedule',
+  'dash.signOut': 'Sign out',
+  'dash.backToSite': 'Back to site',
+  'dash.nowConsulting': 'Now Consulting',
+  'dash.waiting': 'Waiting',
+  'dash.queueEmpty': 'Queue is empty',
+  'dash.callNext': 'Mark Complete & Call Next',
+  'dash.callFirst': 'Call First Patient',
+  'dash.checkedIn': 'Checked in',
+  'dash.notArrived': 'Not arrived yet',
+  'dash.ready': 'Ready',
+  'dash.live': 'Live',
+  'dash.connecting': 'Connecting…',
+  'dash.refresh': 'Refresh',
+  'dash.totalToday': 'Total today',
+  'dash.inConsultation': 'In consultation',
+
+
+
+
+  // rw — Dashboard
+  'dash.overview': 'Incamake',
+  'dash.liveQueue': 'Umurongo',
+  'dash.mySchedule': 'Gahunda yanjye',
+  'dash.signOut': 'Sohoka',
+  'dash.backToSite': 'Subira ku rubuga',
+  'dash.nowConsulting': 'Ubu arimo kwigwa',
+  'dash.waiting': 'Bategereje',
+  'dash.queueEmpty': 'Umurongo ntacyo urimo',
+  'dash.callNext': 'Rangiza & Hamagara ukurikira',
+  'dash.callFirst': 'Hamagara uwa mbere',
+  'dash.checkedIn': 'Yageze',
+  'dash.notArrived': 'Ntaragera',
+  'dash.ready': 'Yiteguye',
+  'dash.live': 'Bihari',
+  'dash.connecting': 'Turimo guhuza…',
+  'dash.refresh': 'Ongera usubire',
+  'dash.totalToday': 'Uyu munsi',
+  'dash.inConsultation': 'Bari mu kiganiro',
 };
 
 export const dict = { en, rw, fr };

@@ -18,9 +18,10 @@ function AdminLogin({ onLoginSuccess }) {
 
             if (response.data.success) {
                 // Store token and user data
-                localStorage.setItem('sangwa_admin_token', response.data.data.token);
-                localStorage.setItem('sangwa_admin_user', JSON.stringify(response.data.data.admin));
+                localStorage.setItem('sangwa_token', response.data.token);
+                localStorage.setItem('sangwa_user', JSON.stringify(response.data.user));
 
+                
                 toast.success('✅ Login successful!');
                 onLoginSuccess();
             }

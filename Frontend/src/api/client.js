@@ -1,118 +1,185 @@
-// frontend/src/api/client.js
+// src/api/client.js
 import axios from 'axios';
 
-
-// Environment detection - FIXED ORDER
+// Environment detection
 const getApiBaseUrl = () => {
-  // 1. Check if we're in development mode FIRST
-  const isDevelopment = window.location.hostname === 'localhost' ||
+  const isDev =
+    window.location.hostname === 'localhost' ||
     window.location.hostname === '127.0.0.1';
 
-  if (isDevelopment) {
+  if (isDev) {
     return 'http://localhost:5000/api';
   }
 
-  // 2. For production, use environment variable if available
   if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
+    return `${import.meta.env.VITE_API_URL}/api`;
   }
 
-  // 3. Fallback (should never hit in production if env vars are set)
-  console.warn('⚠️ No VITE_API_URL found, using default fallback');
-  return 'https://card-agent-256t.onrender.com/api';
+  console.warn('⚠️ No VITE_API_URL found, using localhost fallback');
+  return 'http://localhost:5000/api';
 };
 
 const API_URL = getApiBaseUrl();
 
-// Create axios instance
 const apiClient = axios.create({
   baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 10000,
+  headers: { 'Content-Type': 'application/json' },
+  timeout: 15000,
+  withCredentials: true
 });
 
-// Request interceptor - Add token to requests
+// ============================================================
+// REQUEST interceptor — attach JWT
+// ============================================================
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('sangwa_admin_token');
+    // ✅ New key: sangwa_token (was sangwa_admin_token)
+    const token = localStorage.getItem('sangwa_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Auto-attach idempotency key on mutating requests (opt-in)
+    if (
+      ['post', 'put', 'patch', 'delete'].includes(config.method?.toLowerCase()) &&
+      config.headers['X-Idempotent'] === 'true'
+    ) {
+      config.headers['Idempotency-Key'] = crypto.randomUUID();
+      delete config.headers['X-Idempotent'];
+    }
+
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor - Handle token expiration
+// ============================================================
+// RESPONSE interceptor — normalize + handle 401
+// ============================================================
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('sangwa_admin_token');
-      localStorage.removeItem('sangwa_admin_user');
-      window.location.href = '/admin/login';
+    const status = error.response?.status;
+
+    // 401 → clear auth and bounce to login (except on login attempt itself)
+    if (status === 401) {
+      const url = error.config?.url || '';
+      if (!url.includes('/auth/login')) {
+        localStorage.removeItem('sangwa_token');
+        localStorage.removeItem('sangwa_user');
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login?expired=1';
+        }
+      }
     }
+
+    // Attach a friendly message for toast display
+    error.displayMessage =
+      error.response?.data?.message ||
+      error.response?.data?.errors?.[0]?.message ||
+      error.message ||
+      'Something went wrong';
+
     return Promise.reject(error);
   }
 );
 
-// ===== Public API Calls =====
-
-// Bookings (Public - No Auth Required)
+// ============================================================
+// PUBLIC APIs
+// ============================================================
 export const bookingAPI = {
-  // Create a new booking
-  create: (data) => apiClient.post('/bookings', data),
-  
-  // Get booking by reference (Public)
+  create: (data) =>
+    apiClient.post('/bookings', data, { headers: { 'X-Idempotent': 'true' } }),
   getByReference: (reference) => apiClient.get(`/bookings/reference/${reference}`),
+  availability: (params) => apiClient.get('/bookings/availability', { params })
 };
-
-// ===== Admin API Calls (Auth Required) =====
-
-export const adminAPI = {
-  // Get all bookings
-  getBookings: (params) => apiClient.get('/bookings', { params }),
-  
-  // Get single booking
-  getBooking: (id) => apiClient.get(`/bookings/${id}`),
-  
-  // Update booking status
-  updateStatus: (id, status) => apiClient.put(`/bookings/${id}/status`, { status }),
-  
-  // Delete booking
-  deleteBooking: (id) => apiClient.delete(`/bookings/${id}`),
-  
-  // Get dashboard stats
-  getStats: () => apiClient.get('/bookings/stats'),
-};
-
-// ===== Auth API Calls =====
-
-export const authAPI = {
-  // Admin login
-  login: (email, password) => apiClient.post('/auth/login', { email, password }),
-  
-  // Get current admin profile
-  getProfile: () => apiClient.get('/auth/profile'),
-  
-  // Logout (client-side only)
-  logout: () => {
-    localStorage.removeItem('sangwa_admin_token');
-    localStorage.removeItem('sangwa_admin_user');
-  },
-};
-
-// ===== Services API =====
 
 export const servicesAPI = {
-  // Get all available services
   getAll: () => apiClient.get('/services'),
+  getBySlug: (slug) => apiClient.get(`/services/${slug}`)
 };
 
-export default apiClient;
+export const doctorsAPI = {
+  getAll: (params) => apiClient.get('/doctors', { params }),
+  getOne: (id) => apiClient.get(`/doctors/${id}`)
+};
 
+export const insurancesAPI = {
+  getPublic: () => apiClient.get('/insurances/public')
+};
+
+// ============================================================
+// AUTH APIs
+// ============================================================
+export const authAPI = {
+  login: (email, password) => apiClient.post('/auth/login', { email, password }),
+  getMe: () => apiClient.get('/auth/me'),
+  logout: () => apiClient.post('/auth/logout'),
+  changePassword: (currentPassword, newPassword) =>
+    apiClient.put('/auth/change-password', { currentPassword, newPassword })
+};
+
+// ============================================================
+// ADMIN / STAFF APIs
+// ============================================================
+export const adminAPI = {
+  // Bookings
+  getBookings: (params) => apiClient.get('/bookings', { params }),
+  getBooking: (id) => apiClient.get(`/bookings/${id}`),
+  updateStatus: (id, status) => apiClient.put(`/bookings/${id}/status`, { status }),
+  confirmBooking: (id, payload) => apiClient.post(`/bookings/${id}/confirm`, payload),
+  cancelBooking: (id, reason) =>
+    apiClient.post(`/bookings/${id}/cancel`, { reason }),
+  checkIn: (id) => apiClient.post(`/bookings/${id}/check-in`),
+  deleteBooking: (id) => apiClient.delete(`/bookings/${id}`),
+  getStats: () => apiClient.get('/dashboard/stats')
+};
+
+export const patientsAPI = {
+  search: (q) => apiClient.get('/patients/search', { params: { q } }),
+  lookup: (phone) => apiClient.get('/patients/lookup', { params: { phone } }),
+  getOne: (id) => apiClient.get(`/patients/${id}`),
+  getBookings: (id) => apiClient.get(`/patients/${id}/bookings`),
+  create: (data) => apiClient.post('/patients', data),
+  update: (id, data) => apiClient.put(`/patients/${id}`, data)
+};
+
+export const queueAPI = {
+  getMyQueue: (params) => apiClient.get('/queue', { params }),
+  advance: (data) => apiClient.post('/queue/advance', data),
+  pause: () => apiClient.post('/queue/pause')
+};
+
+// ============================================================
+// SSE HELPER (real-time)
+// ============================================================
+export function connectEventStream(path, handlers = {}) {
+  const base = API_URL.replace('/api', '');
+  const url = `${base}/api${path}`;
+  const token = localStorage.getItem('sangwa_token');
+
+  // EventSource doesn't support custom headers — append token as query
+  const urlWithToken = token
+    ? `${url}${url.includes('?') ? '&' : '?'}token=${encodeURIComponent(token)}`
+    : url;
+
+  const source = new EventSource(urlWithToken, { withCredentials: true });
+
+  source.onopen = () => handlers.onOpen?.();
+  source.onerror = (err) => handlers.onError?.(err);
+  source.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      handlers.onMessage?.(data);
+    } catch {
+      handlers.onMessage?.(event.data);
+    }
+  };
+
+  return {
+    close: () => source.close(),
+    source
+  };
+}
+
+export default apiClient;
